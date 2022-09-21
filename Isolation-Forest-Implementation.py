@@ -11,6 +11,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 #https://www.kaggle.com/code/ranjeetshrivastav/fraud-detection-pycaret
 #https://www.kaggle.com/datasets/kartik2112/fraud-detection
 data_path = "data/transactions.txt"
+# In mac probably csv
 df = pd.read_json(data_path,lines=True)
 
 le = LabelEncoder()
