@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder,OrdinalEncoder
 from sklearn import  metrics
+from sklearn.model_selection import  StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix,f1_score
 from sklearn.ensemble import IsolationForest
@@ -35,20 +36,20 @@ else :
 numeric_columns = ['availableMoney', 'creditLimit', 'currentBalance', 'transactionAmount']
 
 categorical_columns = ['accountNumber', 'acqCountry', 'cardCVV', 'cardLast4Digits', 'cardPresent',
-                       'customerId', 'dateOfLastAddressChange', 'enteredCVV','expirationDateKeyInMatch', 'merchantCategoryCode',
-                       'merchantCountryCode', 'merchantName', 'posConditionCode', 'posEntryMode',
-                       'transactionType']
+                       'customerId', 'dateOfLastAddressChange', 'enteredCVV','expirationDateKeyInMatch',
+                       'merchantCategoryCode','merchantCountryCode', 'merchantName', 'posConditionCode',
+                       'posEntryMode','transactionType']
 
 date_columns = ['accountOpenDate', 'currentExpDate', 'transactionDateTime']
 target = ["isFraud"]
 
-data_matrix = df.loc[:,numeric_columns+categorical_columns+date_columns]
+X = df.loc[:,numeric_columns+categorical_columns+date_columns]
 y = df.loc[:,"isFraud"].astype(int)
 #############################################################
 
 
 #################### Preprocessing ##########################
-class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
+class MultiColumnCategoricalEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, columns=None):
         self.columns = columns # array of column names to encode
@@ -57,14 +58,14 @@ class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
         self.encoders = {}
         columns = X.columns if self.columns is None else self.columns
         for col in columns:
-            self.encoders[col] = LabelEncoder().fit(X[col])
+            self.encoders[col] = OrdinalEncoder( handle_unknown = 'use_encoded_value',unknown_value = -999).fit(X[[col]])
         return self
 
     def transform(self, X):
         output = X.copy()
         columns = X.columns if self.columns is None else self.columns
         for col in columns:
-            output[col] = self.encoders[col].transform(X[col])
+            output[col] = self.encoders[col].transform(X[[col]])
         return output
 
     def fit_transform(self, X, y=None):
@@ -74,7 +75,7 @@ class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
         output = X.copy()
         columns = X.columns if self.columns is None else self.columns
         for col in columns:
-            output[col] = self.encoders[col].inverse_transform(X[col])
+            output[col] = self.encoders[col].inverse_transform(X[[col]])
         return output
 
 
@@ -111,20 +112,23 @@ class DateEncoder(BaseEstimator, TransformerMixin):
 
 ##################### Pipeline ##############################
 # Expected columns out of the preprocessing pipeline
-encoded_data_columns = [col +"_"+ time for col in date_columns for time in ["year", "month", "day", "hour", "minute", "second"] ]
+time_frames = ["year", "month", "day", "hour", "minute", "second"]
+encoded_data_columns = [col +"_"+ time for col in date_columns for time in time_frames]
 pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
 
 # Init Pipeline
 preprocessing_pipeline  = ColumnTransformer(
     [
-        ("MultiColumnLabelEncoder",MultiColumnLabelEncoder(),categorical_columns),
+        ("MultiColumnLabelEncoder",MultiColumnCategoricalEncoder(),categorical_columns),
         ("DataEncoder", DateEncoder(), date_columns),
-    ],remainder="passthrough"
+    ],
+    remainder="passthrough"
 )
 
 
 IF = IsolationForest(n_estimators=100, max_samples='auto',
-                     max_features=1.0, bootstrap=False, n_jobs=-1, random_state=42, verbose=0)
+                     max_features=1.0, bootstrap=True,
+                     n_jobs=-1, random_state=42, verbose=0)
 complete_pipeline = Pipeline([
     ('Preprocessing', preprocessing_pipeline),
     ('Model',IF)
@@ -133,9 +137,36 @@ complete_pipeline = Pipeline([
 
 
 ##################### Cross Validation ######################
-# Need to perform a stratified K fold CV
-# Use f1 metric because we want to see how good we have generalized frauds
+n_splits = 10
+kfold = StratifiedKFold(n_splits=n_splits,shuffle=True,random_state=11)
+splits = kfold.split(X,y)
+result_list = []
+train_index_list = []
+test_index_list = []
+fitted_list = []
+for n,(train_index,test_index) in enumerate(splits):
+    start = time.time()
+    # Prepare Train Test
+    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    # Run Pipeline and Score
+    fitted_pipeline = complete_pipeline.fit(X_train)
+    anomaly_score = fitted_pipeline.decision_function(X_test)
+    predictions = [ 1  if i < 0 else 0 for i in anomaly_score ]
+    score = f1_score(y_test, predictions)
+    # Save Score and params
+    result_list.append(score)
+    train_index_list.append(train_index)
+    test_index_list.append(test_index)
+    fitted_list.append(fitted_pipeline)
+    # Running Time
+    end = time.time()
+    running_time = end - start
+    print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
 
+CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list),
+                          columns=["F1-score","train-idx","test-idx","fitted-pipeline"])
+print(CV_results)
 #############################################################
 
 
