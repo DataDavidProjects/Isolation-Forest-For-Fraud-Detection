@@ -137,6 +137,11 @@ complete_pipeline = Pipeline([
 
 
 ##################### Cross Validation ######################
+dev = True
+if dev :
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
 n_splits = 10
 kfold = StratifiedKFold(n_splits=n_splits,shuffle=True,random_state=11)
 splits = kfold.split(X,y)
@@ -144,6 +149,7 @@ result_list = []
 train_index_list = []
 test_index_list = []
 fitted_list = []
+anomaly_score_list = []
 for n,(train_index,test_index) in enumerate(splits):
     start = time.time()
     # Prepare Train Test
@@ -156,16 +162,17 @@ for n,(train_index,test_index) in enumerate(splits):
     score = f1_score(y_test, predictions)
     # Save Score and params
     result_list.append(score)
-    train_index_list.append(train_index)
-    test_index_list.append(test_index)
+    train_index_list.append(train_index.tolist())
+    test_index_list.append(test_index.tolist())
     fitted_list.append(fitted_pipeline)
+    anomaly_score_list.append(anomaly_score.tolist())
     # Running Time
     end = time.time()
     running_time = end - start
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
 
-CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list),
-                          columns=["F1-score","train-idx","test-idx","fitted-pipeline"])
+CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list,anomaly_score_list),
+                          columns=["F1-score","train-idx","test-idx","fitted-pipeline","anomaly_score_list"])
 print(CV_results)
 #############################################################
 
