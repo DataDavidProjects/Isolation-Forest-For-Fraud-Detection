@@ -3,73 +3,51 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder,OrdinalEncoder
 from sklearn import  metrics
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import confusion_matrix,f1_score
 from sklearn.ensemble import IsolationForest
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
-
-#https://www.kaggle.com/code/ranjeetshrivastav/fraud-detection-pycaret
-#https://www.kaggle.com/datasets/kartik2112/fraud-detection
-data_path = "data/transactions.txt"
-# In mac probably csv
-df = pd.read_json(data_path,lines=True)
-
-le = LabelEncoder()
-cat_columns = ['merchantName','acqCountry','merchantCountryCode','posEntryMode',
-               'posConditionCode','merchantCategoryCode','transactionType',
-               'cardPresent','expirationDateKeyInMatch','isFraud']
-for i in cat_columns:
-    df[i] = le.fit_transform(df[i])
-
-# converting in datetime format
-df['transactionDateTime'] = pd.to_datetime(df['transactionDateTime'])
-df['currentExpDate'] = pd.to_datetime(df['currentExpDate'])
-df['accountOpenDate'] = pd.to_datetime(df['accountOpenDate'])
-df['dateOfLastAddressChange'] = pd.to_datetime(df['dateOfLastAddressChange'])
-
-df['transactionDateTime_year'] = df['transactionDateTime'].dt.year
-df['transactionDateTime_month'] = df['transactionDateTime'].dt.month
-df['transactionDateTime_day'] = df['transactionDateTime'].dt.day
-df['transactionDateTime_hour'] = df['transactionDateTime'].dt.hour
-df['transactionDateTime_minute'] = df['transactionDateTime'].dt.minute
-df['transactionDateTime_second'] = df['transactionDateTime'].dt.second
-
-df['currentExpDate_year'] = df['currentExpDate'].dt.year
-df['currentExpDate_month'] = df['currentExpDate'].dt.month
-df['currentExpDate_day'] = df['currentExpDate'].dt.day
-
-df['accountOpenDate_year'] = df['accountOpenDate'].dt.year
-df['accountOpenDate_month'] = df['accountOpenDate'].dt.month
-df['accountOpenDate_day'] = df['accountOpenDate'].dt.day
-
-df['dateOfLastAddressChange_year'] = df['dateOfLastAddressChange'].dt.year
-df['dateOfLastAddressChange_month'] = df['dateOfLastAddressChange'].dt.month
-df['dateOfLastAddressChange_day'] = df['dateOfLastAddressChange'].dt.day
-
-# drop datetime column
-df.drop('transactionDateTime',axis = 1,inplace = True)
-df.drop('currentExpDate',axis = 1,inplace = True)
-df.drop('accountOpenDate',axis = 1,inplace = True)
-df.drop('dateOfLastAddressChange',axis = 1,inplace = True)
+import time
 
 
-#df.to_csv("data/transactions-preprocessed.txt",index=False)
 
-############ DEV
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder,OrdinalEncoder
-from sklearn import  metrics
-from sklearn.ensemble import IsolationForest
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.base import BaseEstimator, TransformerMixin
+##################### Reading Data #########################
+mac = False
+if mac:
+    data_path = "data/transactions"
+    df = pd.read_csv(data_path,index_col =0)
+    df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
+            axis=1,
+            inplace=True)
+else :
+    data_path = "data/transactions.txt"
+    df = pd.read_json(data_path, lines=True)
+    df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
+            axis=1,
+            inplace=True)
+#############################################################
 
-raw = pd.read_json("data/transactions.txt",lines=True)
-########### Pipeline ################
 
+##################### Data Matrix Definition ###############################
+numeric_columns = ['availableMoney', 'creditLimit', 'currentBalance', 'transactionAmount']
+
+categorical_columns = ['accountNumber', 'acqCountry', 'cardCVV', 'cardLast4Digits', 'cardPresent',
+                       'customerId', 'dateOfLastAddressChange', 'enteredCVV','expirationDateKeyInMatch', 'merchantCategoryCode',
+                       'merchantCountryCode', 'merchantName', 'posConditionCode', 'posEntryMode',
+                       'transactionType']
+
+date_columns = ['accountOpenDate', 'currentExpDate', 'transactionDateTime']
+target = ["isFraud"]
+
+data_matrix = df.loc[:,numeric_columns+categorical_columns+date_columns]
+y = df.loc[:,"isFraud"].astype(int)
+#############################################################
+
+
+#################### Preprocessing ##########################
 class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, columns=None):
@@ -100,54 +78,78 @@ class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
         return output
 
 
-class Preprocessing(BaseEstimator, TransformerMixin):
+class DateEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, by=1, columns=None):
         self.by = by
         self.columns = columns
 
     def fit(self, X, y=None):
+        columns = X.columns if self.columns is None else self.columns
         return self
 
     def transform(self,X, y=None):
-        # converting in datetime format
-        X['transactionDateTime'] = pd.to_datetime(X['transactionDateTime'])
-        X['currentExpDate'] = pd.to_datetime(X['currentExpDate'])
-        X['accountOpenDate'] = pd.to_datetime(X['accountOpenDate'])
-        X['dateOfLastAddressChange'] = pd.to_datetime(X['dateOfLastAddressChange'])
-
-        X['transactionDateTime_year'] = X['transactionDateTime'].dt.year
-        X['transactionDateTime_month'] = X['transactionDateTime'].dt.month
-        X['transactionDateTime_day'] = X['transactionDateTime'].dt.day
-        X['transactionDateTime_hour'] = X['transactionDateTime'].dt.hour
-        X['transactionDateTime_minute'] = X['transactionDateTime'].dt.minute
-        X['transactionDateTime_second'] = X['transactionDateTime'].dt.second
-
-        X['currentExpDate_year'] = X['currentExpDate'].dt.year
-        X['currentExpDate_month'] = X['currentExpDate'].dt.month
-        X['currentExpDate_day'] = X['currentExpDate'].dt.day
-
-        X['accountOpenDate_year'] = X['accountOpenDate'].dt.year
-        X['accountOpenDate_month'] = X['accountOpenDate'].dt.month
-        X['accountOpenDate_day'] = X['accountOpenDate'].dt.day
-
-        X['dateOfLastAddressChange_year'] = X['dateOfLastAddressChange'].dt.year
-        X['dateOfLastAddressChange_month'] = X['dateOfLastAddressChange'].dt.month
-        X['dateOfLastAddressChange_day'] = X['dateOfLastAddressChange'].dt.day
-        return X
+        columns = X.columns if self.columns is None else self.columns
+        output = X.copy()
+        # Converting in datetime format
+        time_frames_str = ["year", "month", "day", "hour", "minute", "second"]
+        for col in columns:
+            # cast as time
+            output[col] = pd.to_datetime(output[col])
+            for time in time_frames_str:
+                try:
+                    # create the new column with time frame information
+                    output[col+"_"+time] = getattr(output[col].dt, time)
+                except:
+                    print(f"Problems in {col,time}")
+                    pass
+            # drop original columns
+            output = output.drop(col,axis = 1)
+        return output
+#############################################################
 
 
-# Final Pipeline
-cat_columns =  ['merchantName','acqCountry','merchantCountryCode','posEntryMode',
-               'posConditionCode','merchantCategoryCode','transactionType',
-               'cardPresent','expirationDateKeyInMatch','isFraud']
-pipeline  = ColumnTransformer(
+##################### Pipeline ##############################
+# Expected columns out of the preprocessing pipeline
+encoded_data_columns = [col +"_"+ time for col in date_columns for time in ["year", "month", "day", "hour", "minute", "second"] ]
+pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
+
+# Init Pipeline
+preprocessing_pipeline  = ColumnTransformer(
     [
-        ("preprocessing", Preprocessing(),raw.columns.tolist()),
-        ("encoding",MultiColumnLabelEncoder(),cat_columns)
-      ]
+        ("MultiColumnLabelEncoder",MultiColumnLabelEncoder(),categorical_columns),
+        ("DataEncoder", DateEncoder(), date_columns),
+    ],remainder="passthrough"
 )
 
-p_res  = pipeline.fit(raw).transform(raw)
-p_res = pd.DataFrame(p_res)
-print('Done!')
+IF = IsolationForest(n_estimators=100, max_samples='auto',
+                     max_features=1.0, bootstrap=False, n_jobs=-1, random_state=42, verbose=0)
+complete_pipeline = Pipeline([
+    ('Preprocessing', preprocessing_pipeline),
+    ('Model',IF)
+])
+#############################################################
+
+
+##################### Cross Validation ######################
+
+
+#############################################################
+
+
+
+
+################## Run Pipeline ##############################
+start = time.time()
+predictions  =  complete_pipeline.fit(data_matrix.values).predict(data_matrix.values)
+end = time.time()
+running_time = end-start
+print(f'Done in {round(running_time,3)} seconds')
+#############################################################
+
+
+##################### Results ##############################
+print(f1_score(y ,predictions) )
+
+############################################################
+
