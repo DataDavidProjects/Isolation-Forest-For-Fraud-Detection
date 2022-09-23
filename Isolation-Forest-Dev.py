@@ -265,7 +265,7 @@ tscv = TimeBasedCV(train_period=60,
                    test_period=30,
                    freq='days')
 splits = tscv.split(X,
-                   validation_split_date=datetime.date(2016,8,1), date_column='transactionDateTime')
+                   validation_split_date=datetime.date(2016,2,1), date_column='transactionDateTime')
 result_list = []
 train_index_list = []
 test_index_list = []
@@ -297,10 +297,9 @@ for n,(train_index,test_index) in enumerate(splits):
     running_time = end - start
     print("_" * 30)
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
+    print(metrics.classification_report(y_test, predictions))
     print("Proportions in train:")
     print(y_train.value_counts())
-    print("Proportions in test:")
-    print(y_test.value_counts())
 
 
 CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list),
