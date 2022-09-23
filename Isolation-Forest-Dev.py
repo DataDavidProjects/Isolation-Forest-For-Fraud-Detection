@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
+from datetime import datetime as dt
+from dateutil.relativedelta import *
 from sklearn.preprocessing import LabelEncoder,OrdinalEncoder
 from sklearn import  metrics
 from sklearn.model_selection import  StratifiedKFold
@@ -10,6 +13,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import TfidfVectorizer
 import time
 
 
@@ -20,15 +24,19 @@ mac = False
 if mac:
     data_path = "data/transactions"
     df = pd.read_csv(data_path,index_col =0)
+    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
     df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
             axis=1,
             inplace=True)
+    df = df.sort_values(by="transactionDateTime")
 else :
     data_path = "data/transactions.txt"
     df = pd.read_json(data_path, lines=True)
+    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
     df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
             axis=1,
             inplace=True)
+    df = df.sort_values(by="transactionDateTime")
 #############################################################
 
 
@@ -50,6 +58,14 @@ y = df.loc[:,"isFraud"].astype(int)
 
 #################### Preprocessing ##########################
 class MultiColumnCategoricalEncoder(BaseEstimator, TransformerMixin):
+
+    """"
+    Returns
+    ------------
+            for each catogorical columns:
+                    LabelEncoder fitted and transformed independently
+
+    """
 
     def __init__(self, columns=None):
         self.columns = columns # array of column names to encode
@@ -80,6 +96,13 @@ class MultiColumnCategoricalEncoder(BaseEstimator, TransformerMixin):
 
 
 class DateEncoder(BaseEstimator, TransformerMixin):
+    '''
+    Returns
+    -------
+    for each date column:
+            year , month , day ,hour , minute, seconds in seperate columns
+
+    '''
 
     def __init__(self, by=1, columns=None):
         self.by = by
@@ -107,6 +130,107 @@ class DateEncoder(BaseEstimator, TransformerMixin):
             # drop original columns
             output = output.drop(col,axis = 1)
         return output
+
+
+class TimeBasedCV(object):
+    '''
+    Parameters
+    ----------
+    train_period: int
+        number of time units to include in each train set
+        default is 30
+    test_period: int
+        number of time units to include in each test set
+        default is 7
+    freq: string
+        frequency of input parameters. possible values are: days, months, years, weeks, hours, minutes, seconds
+        possible values designed to be used by dateutil.relativedelta class
+        deafault is days
+    '''
+
+    def __init__(self, train_period=30, test_period=7, freq='days'):
+        self.train_period = train_period
+        self.test_period = test_period
+        self.freq = freq
+
+    def split(self, data, validation_split_date=None, date_column='record_date', gap=0):
+        '''
+        Generate indices to split data into training and test set
+
+        Parameters
+        ----------
+        data: pandas DataFrame
+            your data, contain one column for the record date
+        validation_split_date: datetime.date()
+            first date to perform the splitting on.
+            if not provided will set to be the minimum date in the data after the first training set
+        date_column: string, deafult='record_date'
+            date of each record
+        gap: int, default=0
+            for cases the test set does not come right after the train set,
+            *gap* days are left between train and test sets
+
+        Returns
+        -------
+        train_index ,test_index:
+            list of tuples (train index, test index) similar to sklearn model selection
+        '''
+
+        # check that date_column exist in the data:
+        try:
+            data[date_column]
+        except:
+            raise KeyError(date_column)
+
+        train_indices_list = []
+        test_indices_list = []
+
+        if validation_split_date == None:
+            validation_split_date = data[date_column].min().date() + eval(
+                'relativedelta(' + self.freq + '=self.train_period)')
+
+        start_train = validation_split_date - eval('relativedelta(' + self.freq + '=self.train_period)')
+        end_train = start_train + eval('relativedelta(' + self.freq + '=self.train_period)')
+        start_test = end_train + eval('relativedelta(' + self.freq + '=gap)')
+        end_test = start_test + eval('relativedelta(' + self.freq + '=self.test_period)')
+
+        while end_test < data[date_column].max().date():
+            # train indices:
+            cur_train_indices = list(data[(data[date_column].dt.date >= start_train) &
+                                          (data[date_column].dt.date < end_train)].index)
+
+            # test indices:
+            cur_test_indices = list(data[(data[date_column].dt.date >= start_test) &
+                                         (data[date_column].dt.date < end_test)].index)
+
+            print("Train period:", start_train, "-", end_train, ", Test period", start_test, "-", end_test,
+                  "# train records", len(cur_train_indices), ", # test records", len(cur_test_indices))
+
+            train_indices_list.append(cur_train_indices)
+            test_indices_list.append(cur_test_indices)
+
+            # update dates:
+            start_train = start_train + eval('relativedelta(' + self.freq + '=self.test_period)')
+            end_train = start_train + eval('relativedelta(' + self.freq + '=self.train_period)')
+            start_test = end_train + eval('relativedelta(' + self.freq + '=gap)')
+            end_test = start_test + eval('relativedelta(' + self.freq + '=self.test_period)')
+
+        # mimic sklearn output
+        index_output = [(train, test) for train, test in zip(train_indices_list, test_indices_list)]
+
+        self.n_splits = len(index_output)
+
+        return index_output
+
+    def get_n_splits(self):
+        """Returns the number of splitting iterations in the cross-validator
+        Returns
+        -------
+        n_splits : int
+            Returns the number of splitting iterations in the cross-validator.
+        """
+        return self.n_splits
+
 #############################################################
 
 
@@ -119,7 +243,7 @@ pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
 # Init Pipeline
 preprocessing_pipeline  = ColumnTransformer(
     [
-        ("MultiColumnLabelEncoder",MultiColumnCategoricalEncoder(),categorical_columns),
+        ("TfidfVectorizer",MultiColumnCategoricalEncoder(),categorical_columns),
         ("DataEncoder", DateEncoder(), date_columns),
     ],
     remainder="passthrough"
@@ -137,19 +261,15 @@ complete_pipeline = Pipeline([
 
 
 ##################### Cross Validation ######################
-dev = True
-if dev :
-    import warnings
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-
-n_splits = 10
-kfold = StratifiedKFold(n_splits=n_splits,shuffle=True,random_state=11)
-splits = kfold.split(X,y)
+tscv = TimeBasedCV(train_period=30,
+                   test_period=30,
+                   freq='days')
+splits = tscv.split(X,
+                   validation_split_date=datetime.date(2016,8,1), date_column='transactionDateTime')
 result_list = []
 train_index_list = []
 test_index_list = []
 fitted_list = []
-anomaly_score_list = []
 for n,(train_index,test_index) in enumerate(splits):
     start = time.time()
     # Prepare Train Test
@@ -162,17 +282,16 @@ for n,(train_index,test_index) in enumerate(splits):
     score = f1_score(y_test, predictions)
     # Save Score and params
     result_list.append(score)
-    train_index_list.append(train_index.tolist())
-    test_index_list.append(test_index.tolist())
+    train_index_list.append(train_index)
+    test_index_list.append(test_index)
     fitted_list.append(fitted_pipeline)
-    anomaly_score_list.append(anomaly_score.tolist())
     # Running Time
     end = time.time()
     running_time = end - start
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
 
-CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list,anomaly_score_list),
-                          columns=["F1-score","train-idx","test-idx","fitted-pipeline","anomaly_score_list"])
+CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list),
+                          columns=["F1-score","train-idx","test-idx","fitted-pipeline"])
 print(CV_results)
 #############################################################
 
@@ -183,4 +302,3 @@ print(CV_results)
 
 
 ############################################################
-

@@ -14,18 +14,19 @@ import time
 
 
 
-
 ##################### Reading Data #########################
 mac = False
 if mac:
     data_path = "data/transactions"
     df = pd.read_csv(data_path,index_col =0)
+    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
     df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
             axis=1,
             inplace=True)
 else :
     data_path = "data/transactions.txt"
     df = pd.read_json(data_path, lines=True)
+    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
     df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
             axis=1,
             inplace=True)
