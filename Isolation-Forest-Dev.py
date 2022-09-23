@@ -284,3 +284,6 @@ print(CV_results)
 
 
 ############################################################
+
+
+df["Transcation-Time"] = pd.to_datetime(df[["Day","Month","Year","Time"]].apply(lambda x:str(x["Day"])+"/"+str(x["Month"])+"/"+str(x["Year"])+" "+str(x["Time"]),axis = 1))
