@@ -261,7 +261,7 @@ complete_pipeline = Pipeline([
 
 
 ##################### Cross Validation ######################
-tscv = TimeBasedCV(train_period=30,
+tscv = TimeBasedCV(train_period=60,
                    test_period=30,
                    freq='days')
 splits = tscv.split(X,
@@ -270,6 +270,12 @@ result_list = []
 train_index_list = []
 test_index_list = []
 fitted_list = []
+
+dev = True
+if dev:
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
 for n,(train_index,test_index) in enumerate(splits):
     start = time.time()
     # Prepare Train Test
@@ -278,7 +284,8 @@ for n,(train_index,test_index) in enumerate(splits):
     # Run Pipeline and Score
     fitted_pipeline = complete_pipeline.fit(X_train)
     anomaly_score = fitted_pipeline.decision_function(X_test)
-    predictions = [ 1  if i < 0 else 0 for i in anomaly_score ]
+    alert = np.percentile(anomaly_score,30)
+    predictions = [ 1  if i < alert else 0 for i in anomaly_score ]
     score = f1_score(y_test, predictions)
     # Save Score and params
     result_list.append(score)
@@ -288,7 +295,13 @@ for n,(train_index,test_index) in enumerate(splits):
     # Running Time
     end = time.time()
     running_time = end - start
+    print("_" * 30)
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
+    print("Proportions in train:")
+    print(y_train.value_counts())
+    print("Proportions in test:")
+    print(y_test.value_counts())
+
 
 CV_results = pd.DataFrame(zip(result_list,train_index_list,test_index_list,fitted_list),
                           columns=["F1-score","train-idx","test-idx","fitted-pipeline"])
