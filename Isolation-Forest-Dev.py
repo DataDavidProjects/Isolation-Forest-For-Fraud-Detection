@@ -57,43 +57,6 @@ y = df.loc[:,"isFraud"].astype(int)
 
 
 #################### Preprocessing ##########################
-class MultiColumnCategoricalEncoder(BaseEstimator, TransformerMixin):
-
-    """"
-    Returns
-    ------------
-            for each catogorical columns:
-                    LabelEncoder fitted and transformed independently
-
-    """
-
-    def __init__(self, columns=None):
-        self.columns = columns # array of column names to encode
-
-    def fit(self, X, y=None):
-        self.encoders = {}
-        columns = X.columns if self.columns is None else self.columns
-        for col in columns:
-            self.encoders[col] = OrdinalEncoder( handle_unknown = 'use_encoded_value',unknown_value = -999).fit(X[[col]])
-        return self
-
-    def transform(self, X):
-        output = X.copy()
-        columns = X.columns if self.columns is None else self.columns
-        for col in columns:
-            output[col] = self.encoders[col].transform(X[[col]])
-        return output
-
-    def fit_transform(self, X, y=None):
-        return self.fit(X,y).transform(X)
-
-    def inverse_transform(self, X):
-        output = X.copy()
-        columns = X.columns if self.columns is None else self.columns
-        for col in columns:
-            output[col] = self.encoders[col].inverse_transform(X[[col]])
-        return output
-
 
 class DateEncoder(BaseEstimator, TransformerMixin):
     '''
@@ -246,7 +209,7 @@ pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
 # Init Pipeline
 preprocessing_pipeline  = ColumnTransformer(
     [
-        ("TfidfVectorizer",MultiColumnCategoricalEncoder(),categorical_columns),
+        ("TfidfVectorizer",OrdinalEncoder(handle_unknown = 'use_encoded_value',unknown_value = -1),categorical_columns),
         ("DataEncoder", DateEncoder(), date_columns),
     ],
     remainder="passthrough"
@@ -254,7 +217,7 @@ preprocessing_pipeline  = ColumnTransformer(
 
 
 IF = IsolationForest(n_estimators=100, max_samples='auto',
-                     max_features=1.0, bootstrap=True,
+                     max_features=1.0, bootstrap=True,contamination=0.01,
                      n_jobs=-1, random_state=42, verbose=0)
 complete_pipeline = Pipeline([
     ('Preprocessing', preprocessing_pipeline),
