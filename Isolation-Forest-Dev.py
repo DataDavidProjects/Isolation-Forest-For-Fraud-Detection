@@ -97,6 +97,9 @@ class MultiColumnCategoricalEncoder(BaseEstimator, TransformerMixin):
 
 class DateEncoder(BaseEstimator, TransformerMixin):
     '''
+     Parameters-Fixed
+    ----------
+        time frame dates  ["year", "month", "day", "hour", "minute", "second"]
     Returns
     -------
     for each date column:
@@ -262,10 +265,11 @@ complete_pipeline = Pipeline([
 
 ##################### Cross Validation ######################
 tscv = TimeBasedCV(train_period=60,
-                   test_period=30,
+                   test_period=10,
                    freq='days')
 splits = tscv.split(X,
-                   validation_split_date=datetime.date(2016,2,1), date_column='transactionDateTime')
+                    validation_split_date=datetime.date(2016,2,1),
+                    date_column='transactionDateTime')
 result_list = []
 train_index_list = []
 test_index_list = []
@@ -284,7 +288,10 @@ for n,(train_index,test_index) in enumerate(splits):
     # Run Pipeline and Score
     fitted_pipeline = complete_pipeline.fit(X_train)
     anomaly_score = fitted_pipeline.decision_function(X_test)
+    # Set the alert thresshold for cut
     alert = np.percentile(anomaly_score,30)
+
+
     predictions = [ 1  if i < alert else 0 for i in anomaly_score ]
     score = f1_score(y_test, predictions)
     # Save Score and params
