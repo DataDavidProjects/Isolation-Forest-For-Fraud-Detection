@@ -29,7 +29,7 @@ data["Transaction-Time"] = pd.to_datetime(data["Transaction-Time"])#,format='%Y-
 data = data.sort_values(by="Transaction-Time").reset_index(drop=True)
 
 
-df = data.loc[(data["Year"]>2000)&(data["Year"]<2003),:].reset_index(drop=True)
+df = data.loc[(data["Year"]>2008)&(data["Year"]<2010),:].reset_index(drop=True)
 #############################################################
 
 
@@ -216,11 +216,11 @@ complete_pipeline = Pipeline([
 
 
 ##################### Cross Validation ######################
-tscv = TimeBasedCV(train_period=60,
-                   test_period=10,
+tscv = TimeBasedCV(train_period=30*4,
+                   test_period=30,
                    freq='days')
 
-evaluation_time = datetime.date(2002,2,1)
+evaluation_time = None #datetime.date(200x,2,1)
 splits = tscv.split(X,
                     validation_split_date=evaluation_time, # year, month,day
                     date_column="Transaction-Time")
@@ -238,7 +238,8 @@ for n,(train_index,test_index) in enumerate(splits):
     fitted_pipeline = complete_pipeline.fit(X_train)
     anomaly_score = fitted_pipeline.decision_function(X_test)
     # Set the alert thresshold for cut
-    alert = np.percentile(anomaly_score,30)
+    alert = np.percentile(anomaly_score,5)
+
 
     predictions = [ 1  if i < alert else 0 for i in anomaly_score ]
     score = f1_score(y_test, predictions)
@@ -252,7 +253,8 @@ for n,(train_index,test_index) in enumerate(splits):
     running_time = end - start
     print("_" * 30)
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
-    print(metrics.classification_report(y_test, predictions))
+    print(f"Alert:{round(alert, 4)}")
+    print("Report:\n",metrics.classification_report(y_test, predictions))
     print("Proportions in train:")
     print(y_train.value_counts())
 
