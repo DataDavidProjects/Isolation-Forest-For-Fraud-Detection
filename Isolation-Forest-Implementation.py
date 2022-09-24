@@ -209,7 +209,7 @@ pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
 # Init Pipeline
 preprocessing_pipeline  = ColumnTransformer(
     [
-        ("TfidfVectorizer",OrdinalEncoder(handle_unknown = 'use_encoded_value',unknown_value = -1),categorical_columns),
+        ("OrdinalEncoder",OrdinalEncoder(handle_unknown = 'use_encoded_value',unknown_value = -1),categorical_columns),
         ("DataEncoder", DateEncoder(), date_columns),
     ],
     remainder="passthrough"

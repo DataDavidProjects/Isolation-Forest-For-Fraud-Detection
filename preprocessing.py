@@ -5,7 +5,7 @@ import time
 data = pd.read_csv("data/card_transaction.v1.csv")
 
 def clean_data(df):
-    dummies_error = pd.get_dummies(df["Errors?"].replace([np.nan],["None"]).apply(lambda x:x.split(",")).explode().replace("",np.nan).dropna(axis = 0))
+    dummies_error = pd.get_dummies(df["Errors?"].replace([np.nan],["Regular"]).apply(lambda x:x.split(",")).explode().replace("",np.nan).dropna(axis = 0))
     df = df.join(dummies_error).drop({"Errors?"},axis=1)
     df["Is Fraud?"] = [0 if i=="No" else 1 for i in df["Is Fraud?"].values]
     df["Merchant State"] = df["Merchant State"].fillna("ONLINE")
@@ -13,21 +13,25 @@ def clean_data(df):
     df["Amount"] = df["Amount"].replace({'\$':''}, regex = True).astype(float)
     df["Hour"] = pd.to_datetime(df["Time"]).dt.hour
     df["Minute"] = pd.to_datetime(df["Time"]).dt.minute
-    pattern = lambda x: str(x["Day"])+"/"+str(x["Month"])+"/"+str(x["Year"])+" "+str(x["Time"])
-    df["Transcation-Time"] = pd.to_datetime(df[["Day","Month","Year","Time"]].apply(pattern,axis = 1))
+    df["Transaction-Time"] = pd.to_datetime(df[["Year", "Month", "Day", "Time"]].astype(str).agg('-'.join, axis=1),format='%Y-%m-%d-%H:%M')
     df = df.drop({"Time"},axis=1)
-    df = df[['Transcation-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute','Amount',
+    df = df[['Transaction-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute','Amount',
              'User', 'Card','Use Chip',
              'Merchant Name', 'Merchant City', 'Merchant State', 'Zip', 'MCC',
              'Bad CVV', 'Bad Card Number', 'Bad Expiration', 'Bad PIN',
-             'Bad Zipcode', 'Insufficient Balance', 'None', 'Technical Glitch',
+             'Bad Zipcode', 'Insufficient Balance', 'Regular', 'Technical Glitch',
              'Is Fraud?'
            ]]
-    df.columns =['Transcation-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute','Amount',
+    df.columns =['Transaction-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute',
+
+                 'Amount',
+
                  'User', 'Card','Use-Chip',
                  'Merchant-Name', 'Merchant-City', 'Merchant-State', 'Zip', 'MCC',
-                 'Bad-CVV', 'Bad-Card-Number', 'Bad-Expiration', 'Bad-PIN',
-                 'Bad-Zipcode', 'Insufficient-Balance', 'None', 'Technical-Glitch',
+
+                 'Bad-CVV', 'Bad-Card-Number', 'Bad-Expiration', 'Bad-PIN','Bad-Zipcode',
+                 'Insufficient-Balance', 'Regular', 'Technical-Glitch',
+
                  'Fraud']
     print("Done!")
     return df
@@ -35,7 +39,7 @@ def clean_data(df):
 
 start = time.time()
 dfclean = clean_data(data)
-dfclean.to_csv("data/card_transaction.clean.csv")
+dfclean.to_csv("data/card_transaction.clean.csv",index=False)
 end = time.time()
 running_time = end - start
 print(f"Completed in {round(running_time, 3)} seconds")

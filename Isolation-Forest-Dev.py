@@ -18,41 +18,33 @@ import time
 
 
 
+dev = True
+if dev:
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ##################### Reading Data #########################
-mac = False
-if mac:
-    data_path = "data/transactions"
-    df = pd.read_csv(data_path,index_col =0)
-    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
-    df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
-            axis=1,
-            inplace=True)
-    df = df.sort_values(by="transactionDateTime")
-else :
-    data_path = "data/transactions.txt"
-    df = pd.read_json(data_path, lines=True)
-    df["transactionDateTime"] = pd.to_datetime(df["transactionDateTime"])
-    df.drop(['merchantCity', 'merchantState', 'merchantZip', 'echoBuffer', 'posOnPremises', 'recurringAuthInd'],
-            axis=1,
-            inplace=True)
-    df = df.sort_values(by="transactionDateTime")
+data = pd.read_csv("data/card_transaction.clean.csv")
+data["Transaction-Time"] = pd.to_datetime(data["Transaction-Time"],format='%Y-%m-%d-%H:%M')
+data = data.sort_values(by="Transaction-Time")
+df = data.loc[(data["Year"]>2000)&(data["Year"]<2003),:]
 #############################################################
 
 
 ##################### Data Matrix Definition ###############################
-numeric_columns = ['availableMoney', 'creditLimit', 'currentBalance', 'transactionAmount']
+numeric_columns = [ "Amount",
+                    'Bad-CVV', 'Bad-Card-Number', 'Bad-Expiration', 'Bad-PIN',
+                    'Bad-Zipcode', 'Insufficient-Balance', 'None', 'Technical-Glitch']
 
-categorical_columns = ['accountNumber', 'acqCountry', 'cardCVV', 'cardLast4Digits', 'cardPresent',
-                       'customerId', 'dateOfLastAddressChange', 'enteredCVV','expirationDateKeyInMatch',
-                       'merchantCategoryCode','merchantCountryCode', 'merchantName', 'posConditionCode',
-                       'posEntryMode','transactionType']
+categorical_columns = ['User', 'Card','Use-Chip',
+                       'Merchant-Name', 'Merchant-City', 'Merchant-State', 'Zip', 'MCC']
 
-date_columns = ['accountOpenDate', 'currentExpDate', 'transactionDateTime']
-target = ["isFraud"]
+date_columns = ['Transaction-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute']
+target = 'Fraud'
 
 X = df.loc[:,numeric_columns+categorical_columns+date_columns]
-y = df.loc[:,"isFraud"].astype(int)
+
+y = df.loc[:,target]
 #############################################################
 
 
@@ -201,16 +193,11 @@ class TimeBasedCV(object):
 
 
 ##################### Pipeline ##############################
-# Expected columns out of the preprocessing pipeline
-time_frames = ["year", "month", "day", "hour", "minute", "second"]
-encoded_data_columns = [col +"_"+ time for col in date_columns for time in time_frames]
-pipeline_out_columns = categorical_columns+encoded_data_columns+numeric_columns
-
 # Init Pipeline
 preprocessing_pipeline  = ColumnTransformer(
     [
-        ("TfidfVectorizer",OrdinalEncoder(handle_unknown = 'use_encoded_value',unknown_value = -1),categorical_columns),
-        ("DataEncoder", DateEncoder(), date_columns),
+        ("OrdinalEncoder",OrdinalEncoder(handle_unknown = 'use_encoded_value',
+                                         unknown_value = -1),categorical_columns),
     ],
     remainder="passthrough"
 )
@@ -228,20 +215,17 @@ complete_pipeline = Pipeline([
 
 ##################### Cross Validation ######################
 tscv = TimeBasedCV(train_period=60,
-                   test_period=10,
+                   test_period=30,
                    freq='days')
+
+evaluation_time = None #datetime.date(2002,12,1)
 splits = tscv.split(X,
-                    validation_split_date=datetime.date(2016,2,1),
-                    date_column='transactionDateTime')
+                    validation_split_date=evaluation_time, # year, month,day
+                    date_column="Transaction-Time")
 result_list = []
 train_index_list = []
 test_index_list = []
 fitted_list = []
-
-dev = True
-if dev:
-    import warnings
-    warnings.simplefilter(action='ignore', category=FutureWarning)
 
 for n,(train_index,test_index) in enumerate(splits):
     start = time.time()
@@ -253,7 +237,6 @@ for n,(train_index,test_index) in enumerate(splits):
     anomaly_score = fitted_pipeline.decision_function(X_test)
     # Set the alert thresshold for cut
     alert = np.percentile(anomaly_score,30)
-
 
     predictions = [ 1  if i < alert else 0 for i in anomaly_score ]
     score = f1_score(y_test, predictions)
@@ -284,38 +267,3 @@ print(CV_results)
 
 
 ############################################################
-data = pd.read_csv("data/card_transaction.v1.csv")
-def clean_data(df):
-    dummies_error = pd.get_dummies(df["Errors?"].replace([np.nan],["None"]).apply(lambda x:x.split(",")).explode().replace("",np.nan).dropna(axis = 0))
-    df = df.join(dummies_error).drop({"Errors?"},axis=1)
-    df["Is Fraud?"] = [0 if i=="No" else 1 for i in df["Is Fraud?"].values]
-    df["Merchant State"] = df["Merchant State"].fillna("ONLINE")
-    df["Zip"] = df["Zip"].fillna("ONLINE")
-    df["Amount"] = df["Amount"].replace({'\$':''}, regex = True).astype(float)
-    df["Hour"] = pd.to_datetime(df["Time"]).dt.hour
-    df["Minute"] = pd.to_datetime(df["Time"]).dt.minute
-    pattern = lambda x: str(x["Day"])+"/"+str(x["Month"])+"/"+str(x["Year"])+" "+str(x["Time"])
-    df["Transcation-Time"] = pd.to_datetime(df[["Day","Month","Year","Time"]].apply(pattern,axis = 1))
-    df = df.drop({"Time"},axis=1)
-    df = df[['Transcation-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute','Amount',
-             'User', 'Card','Use Chip',
-             'Merchant Name', 'Merchant City', 'Merchant State', 'Zip', 'MCC',
-             'Bad CVV', 'Bad Card Number', 'Bad Expiration', 'Bad PIN',
-             'Bad Zipcode', 'Insufficient Balance', 'None', 'Technical Glitch',
-             'Is Fraud?'
-           ]]
-    df.columns =['Transcation-Time', 'Year', 'Month', 'Day', 'Hour', 'Minute','Amount',
-                 'User', 'Card','Use-Chip',
-                 'Merchant-Name', 'Merchant-City', 'Merchant-State', 'Zip', 'MCC',
-                 'Bad-CVV', 'Bad-Card-Number', 'Bad-Expiration', 'Bad-PIN',
-                 'Bad-Zipcode', 'Insufficient-Balance', 'None', 'Technical-Glitch',
-                 'Fraud']
-    print("Done!")
-    return df
-
-
-start = time.time()
-dfclean = clean_data(data)
-end = time.time()
-running_time = end - start
-print(f"Completed in {round(running_time, 3)} seconds")
