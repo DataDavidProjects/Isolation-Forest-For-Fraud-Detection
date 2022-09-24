@@ -25,16 +25,18 @@ if dev:
 
 ##################### Reading Data #########################
 data = pd.read_csv("data/card_transaction.clean.csv")
-data["Transaction-Time"] = pd.to_datetime(data["Transaction-Time"],format='%Y-%m-%d-%H:%M')
-data = data.sort_values(by="Transaction-Time")
-df = data.loc[(data["Year"]>2000)&(data["Year"]<2003),:]
+data["Transaction-Time"] = pd.to_datetime(data["Transaction-Time"])#,format='%Y-%m-%d %H:%M:%S'
+data = data.sort_values(by="Transaction-Time").reset_index(drop=True)
+
+
+df = data.loc[(data["Year"]>2000)&(data["Year"]<2003),:].reset_index(drop=True)
 #############################################################
 
 
 ##################### Data Matrix Definition ###############################
 numeric_columns = [ "Amount",
                     'Bad-CVV', 'Bad-Card-Number', 'Bad-Expiration', 'Bad-PIN',
-                    'Bad-Zipcode', 'Insufficient-Balance', 'None', 'Technical-Glitch']
+                    'Bad-Zipcode', 'Insufficient-Balance', 'Regular', 'Technical-Glitch']
 
 categorical_columns = ['User', 'Card','Use-Chip',
                        'Merchant-Name', 'Merchant-City', 'Merchant-State', 'Zip', 'MCC']
@@ -218,7 +220,7 @@ tscv = TimeBasedCV(train_period=60,
                    test_period=30,
                    freq='days')
 
-evaluation_time = None #datetime.date(2002,12,1)
+evaluation_time = X["Transaction-Time"][0]
 splits = tscv.split(X,
                     validation_split_date=evaluation_time, # year, month,day
                     date_column="Transaction-Time")
