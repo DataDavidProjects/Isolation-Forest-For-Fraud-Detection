@@ -238,7 +238,8 @@ for n,(train_index,test_index) in enumerate(splits):
     fitted_pipeline = complete_pipeline.fit(X_train)
     anomaly_score = fitted_pipeline.decision_function(X_test)
     # Set the alert thresshold for cut
-    alert = np.percentile(anomaly_score,5)
+    percentile = 5
+    alert = np.percentile(anomaly_score,percentile)
 
 
     predictions = [ 1  if i < alert else 0 for i in anomaly_score ]
@@ -253,7 +254,7 @@ for n,(train_index,test_index) in enumerate(splits):
     running_time = end - start
     print("_" * 30)
     print(f'Iteration {n} completed in {round(running_time, 3)} seconds, F1-score: {score}')
-    print(f"Alert:{round(alert, 4)}")
+    print(f"Alert on percentile {percentile}:{round(alert, 4)}")
     print("Report:\n",metrics.classification_report(y_test, predictions))
     print("Proportions in train:")
     print(y_train.value_counts())
