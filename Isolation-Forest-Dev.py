@@ -217,10 +217,10 @@ complete_pipeline = Pipeline([
 
 ##################### Cross Validation ######################
 tscv = TimeBasedCV(train_period=60,
-                   test_period=30,
+                   test_period=10,
                    freq='days')
 
-evaluation_time = X["Transaction-Time"][0]
+evaluation_time = datetime.date(2002,2,1)
 splits = tscv.split(X,
                     validation_split_date=evaluation_time, # year, month,day
                     date_column="Transaction-Time")
@@ -232,7 +232,7 @@ fitted_list = []
 for n,(train_index,test_index) in enumerate(splits):
     start = time.time()
     # Prepare Train Test
-    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    X_train, X_test = X.iloc[train_index].drop({"Transaction-Time"},axis =1), X.iloc[test_index].drop({"Transaction-Time"},axis =1)
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
     # Run Pipeline and Score
     fitted_pipeline = complete_pipeline.fit(X_train)
