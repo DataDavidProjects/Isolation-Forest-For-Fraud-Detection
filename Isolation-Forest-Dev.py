@@ -205,7 +205,7 @@ preprocessing_pipeline  = ColumnTransformer(
 )
 
 
-IF = IsolationForest(n_estimators=100, max_samples='auto',
+IF = IsolationForest(n_estimators=500, max_samples='auto',
                      max_features=1.0, bootstrap=True,contamination=0.01,
                      n_jobs=-1, random_state=42, verbose=0)
 complete_pipeline = Pipeline([
@@ -217,7 +217,7 @@ complete_pipeline = Pipeline([
 
 ##################### Cross Validation ######################
 tscv = TimeBasedCV(train_period=30*4,
-                   test_period=30,
+                   test_period=30*2,
                    freq='days')
 
 evaluation_time = None #datetime.date(200x,2,1)
