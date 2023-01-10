@@ -35,7 +35,7 @@ class TimeBasedCV(object):
         self.test_period = test_period
         self.freq = freq
 
-    def split(self, data, validation_split_date=None, date_column='record_date', gap=0):
+    def split(self, data, validation_split_date=None, date_column='record_date', verbose = False,gap=0):
         '''
         Generate indices to split data into training and test set
 
@@ -68,15 +68,26 @@ class TimeBasedCV(object):
         test_indices_list = []
 
         if validation_split_date == None:
-            validation_split_date = data[date_column].min().date() + eval(
-                'relativedelta(' + self.freq + '=self.train_period)')
+            try:
+                validation_split_date = data[date_column].min().date() + eval(
+                    'relativedelta(' + self.freq + '=self.train_period)')
+            except:
+                validation_split_date = data[date_column].min()[0].date() + eval(
+                    'relativedelta(' + self.freq + '=self.train_period)')
+
 
         start_train = validation_split_date - eval('relativedelta(' + self.freq + '=self.train_period)')
         end_train = start_train + eval('relativedelta(' + self.freq + '=self.train_period)')
         start_test = end_train + eval('relativedelta(' + self.freq + '=gap)')
         end_test = start_test + eval('relativedelta(' + self.freq + '=self.test_period)')
 
-        while end_test < data[date_column].max().date():
+
+        try:
+            last_date = data[date_column].max().date()
+        except:
+            last_date = data[date_column].max()[0].date()
+
+        while end_test < last_date:
             # train indices:
             cur_train_indices = list(data[(data[date_column].dt.date >= start_train) &
                                           (data[date_column].dt.date < end_train)].index)
@@ -85,8 +96,9 @@ class TimeBasedCV(object):
             cur_test_indices = list(data[(data[date_column].dt.date >= start_test) &
                                          (data[date_column].dt.date < end_test)].index)
 
-            print("Train period:", start_train, "-", end_train, ", Test period", start_test, "-", end_test,
-                  "# train records", len(cur_train_indices), ", # test records", len(cur_test_indices))
+            if verbose:
+                print("Train period:", start_train, "-", end_train, ", Test period", start_test, "-", end_test,
+                      "# train records", len(cur_train_indices), ", # test records", len(cur_test_indices))
 
             train_indices_list.append(cur_train_indices)
             test_indices_list.append(cur_test_indices)

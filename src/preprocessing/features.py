@@ -1,3 +1,5 @@
+import pandas as pd
+
 from src.preprocessing.helpers import timer_decorator
 
 
@@ -73,5 +75,5 @@ def create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",wind
 def create_feature_matrix(transactions_df,windows_size_in_days=[1, 7, 30],delay_period=7):
     customer_features = create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",windows_size_in_days=windows_size_in_days)
     terminal_features = create_features(transactions_df,key = 'TERMINAL_ID',pipeline="terminal",windows_size_in_days=windows_size_in_days,delay_period=delay_period)
-    X = customer_features.merge(terminal_features, on = "TRANSACTION_ID")
+    X = pd.concat([customer_features.set_index("TRANSACTION_ID") ,terminal_features.set_index("TRANSACTION_ID") ],axis=1)
     return X
