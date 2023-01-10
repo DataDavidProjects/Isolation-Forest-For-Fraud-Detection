@@ -71,7 +71,7 @@ def create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",wind
 
 @timer_decorator
 def create_feature_matrix(transactions_df,windows_size_in_days=[1, 7, 30],delay_period=7):
-    customer_features = create_features(create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",windows_size_in_days=windows_size_in_days))
-    terminal_features = create_features(create_features(transactions_df,key = 'TERMINAL_ID',pipeline="terminal",windows_size_in_days=windows_size_in_days,delay_period=delay_period))
+    customer_features = create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",windows_size_in_days=windows_size_in_days)
+    terminal_features = create_features(transactions_df,key = 'TERMINAL_ID',pipeline="terminal",windows_size_in_days=windows_size_in_days,delay_period=delay_period)
     X = customer_features.merge(terminal_features, on = "TRANSACTION_ID")
     return X
