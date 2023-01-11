@@ -3,6 +3,7 @@ import datetime
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import IsolationForest
 
+
 def model_validation(X,model_params,cv,target = "TX_FRAUD",estimator = IsolationForest()):
     """
     Run a model validation using K-fold cross validation technique with random search to find the best hyperparameters.
@@ -24,10 +25,8 @@ def model_validation(X,model_params,cv,target = "TX_FRAUD",estimator = Isolation
                                 param_distributions = model_params,
                                 n_iter = 10,
                                 n_jobs = -1,
-                                iid = True,
                                 cv = cv,
                                 verbose=5,
-                                pre_dispatch='2*n_jobs',
                                 random_state = None,
                                 return_train_score = True)
 

@@ -35,7 +35,7 @@ class TimeBasedCV(object):
         self.test_period = test_period
         self.freq = freq
 
-    def split(self, data, validation_split_date=None, date_column='record_date', verbose = False,gap=0):
+    def split(self, data, validation_split_date=None, date_column='TX_DATETIME', verbose = False,gap=0):
         '''
         Generate indices to split data into training and test set
 
@@ -124,3 +124,5 @@ class TimeBasedCV(object):
             Returns the number of splitting iterations in the cross-validator.
         """
         return self.n_splits
+
+

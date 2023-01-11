@@ -30,8 +30,10 @@ model_params = {'n_estimators':np.linspace(10,500, num=20, retstep=False).astype
                     'verbose':[0],
                     'warm_start':[True]}
 
+
+
 tscv = TimeBasedCV(train_period=30*3, test_period=30,freq='days')
-index_output = tscv.split(X, validation_split_date=datetime.date(2018,9,1))
+index_output = tscv.split(X, validation_split_date=datetime.date(2018,4,1),date_column="TX_DATETIME")
 model = model_validation(X,target = "TX_FRAUD",cv = index_output)
 results  = model.cv_results_
 
