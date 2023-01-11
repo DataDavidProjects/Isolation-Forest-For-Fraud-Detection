@@ -76,4 +76,4 @@ def create_feature_matrix(transactions_df,windows_size_in_days=[1, 7, 30],delay_
     customer_features = create_features(transactions_df,key = 'CUSTOMER_ID',pipeline="customer",windows_size_in_days=windows_size_in_days)
     terminal_features = create_features(transactions_df,key = 'TERMINAL_ID',pipeline="terminal",windows_size_in_days=windows_size_in_days,delay_period=delay_period)
     X = pd.concat([customer_features.set_index("TRANSACTION_ID") ,terminal_features.set_index("TRANSACTION_ID") ],axis=1)
-    return X
+    return X.loc[:,~X.columns.duplicated()]

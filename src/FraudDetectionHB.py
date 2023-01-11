@@ -9,10 +9,6 @@ from src.preprocessing.helpers import TimeBasedCV
 from src.model.validation import model_validation
 
 
-
-
-
-
 calendar = pd.date_range('2018-04-01', '2018-09-30',  inclusive="both").strftime('%Y-%m-%d')
 root = "https://github.com/Fraud-Detection-Handbook/simulated-data-raw/blob/main/data/"
 path_data = [f"{root}{date}.pkl?raw=true" for date in calendar]
@@ -38,7 +34,7 @@ index_output = tscv.split(X, validation_split_date=datetime.date(2018,9,1))
 model = model_validation(X,target = "TX_FRAUD",cv = index_output)
 results  = model.cv_results_
 
-for train_index, test_index in tscv.split(X,validation_split_date=datetime.date(2018, 9, 1), date_column="TX_DATETIME"):
+for train_index, test_index in tscv.split(X,validation_split_date=datetime.date(2018, 4, 1), date_column="TX_DATETIME"):
     print(train_index, test_index)
 
 
