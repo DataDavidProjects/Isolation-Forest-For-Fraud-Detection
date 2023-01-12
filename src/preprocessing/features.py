@@ -55,25 +55,35 @@ def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, window
         pd.DataFrame : DataFrame containing generated features (Number of transactions and risk of fraud)
 
     """
+    # Sort the transactions data by the 'TX_DATETIME' column
     terminal_transactions = terminal_transactions.sort_values('TX_DATETIME')
 
+    # Assign the 'TX_DATETIME' column as the index of the dataframe
     terminal_transactions.index = terminal_transactions.TX_DATETIME
 
+    # Create a new column 'NB_FRAUD_DELAY' which is the rolling sum of the 'TX_FRAUD' column for the 'delay_period' days
     NB_FRAUD_DELAY = terminal_transactions['TX_FRAUD'].rolling(str(delay_period) + 'd').sum()
     NB_TX_DELAY = terminal_transactions['TX_FRAUD'].rolling(str(delay_period) + 'd').count()
 
+    # Iterate over the 'windows_size_in_days' list
     for window_size in windows_size_in_days:
+        # Create a new column 'NB_FRAUD_DELAY_WINDOW'
+        # which is the rolling sum of the 'TX_FRAUD' column for the 'delay_period + window_size' days
         NB_FRAUD_DELAY_WINDOW = terminal_transactions['TX_FRAUD'].rolling(str(delay_period + window_size) + 'd').sum()
         NB_TX_DELAY_WINDOW = terminal_transactions['TX_FRAUD'].rolling(str(delay_period + window_size) + 'd').count()
 
+        # Create a new column 'NB_FRAUD_WINDOW' which is the difference between 'NB_FRAUD_DELAY_WINDOW' and 'NB_FRAUD_DELAY'
         NB_FRAUD_WINDOW = NB_FRAUD_DELAY_WINDOW - NB_FRAUD_DELAY
         NB_TX_WINDOW = NB_TX_DELAY_WINDOW - NB_TX_DELAY
 
+        # Create a new column 'RISK_WINDOW' which is the division of 'NB_FRAUD_WINDOW' by 'NB_TX_WINDOW'
         RISK_WINDOW = NB_FRAUD_WINDOW / NB_TX_WINDOW
 
+        # Create new columns in the dataframe, with the desired format, using the calculated values
         terminal_transactions[feature + '_NB_TX_' + str(window_size) + 'DAY_WINDOW'] = list(NB_TX_WINDOW)
         terminal_transactions[feature + '_RISK_' + str(window_size) + 'DAY_WINDOW'] = list(RISK_WINDOW)
 
+    # Assign the 'TRANSACTION_ID' column as the index of the dataframe
     terminal_transactions.index = terminal_transactions.TRANSACTION_ID
 
     # Replace NA values with 0 (all undefined risk scores where NB_TX_WINDOW is 0)
@@ -81,7 +91,7 @@ def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, window
 
     return terminal_transactions
 
-def get_time_features(transactions_df,time_col= "TX_DATETIME",time_frames = ["day","hour", "minute"],index="TRANSACTION_ID"):
+def get_time_features(transactions_df, time_col= "TX_DATETIME", time_frames =["month", "day", "hour", "minute"], index="TRANSACTION_ID"):
     """
        Extract time-based features from a DataFrame containing transaction data.
 
@@ -95,8 +105,11 @@ def get_time_features(transactions_df,time_col= "TX_DATETIME",time_frames = ["da
            pd.DataFrame : DataFrame containing extracted time-based features.
     """
     transactions_df = transactions_df[[time_col,index]].copy()
+    # Cast the columns as a datetime object
     transactions_df[time_col] = pd.to_datetime(transactions_df[time_col]) # make sure the column is datetime
+    # Iterate over the column to extract month day hour minute seconds
     time_feats = pd.concat([transactions_df[time_col].dt.__getattribute__(time) for time in time_frames], axis=1)
+    # Rename the columns using upper case
     time_feats.columns = ["TX_"+time.upper() for time in time_frames]
     return time_feats
 

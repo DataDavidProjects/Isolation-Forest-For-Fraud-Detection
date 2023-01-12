@@ -1,8 +1,9 @@
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV
+from src.preprocessing.helpers import timer_decorator
 
-
+@timer_decorator
 def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, random_state=42):
     """
     Tune the hyperparameters of an Isolation Forest model using RandomizedSearchCV.
@@ -26,7 +27,8 @@ def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, ra
                       'max_features': [1, 0.5, 'auto']}
 
     # Define the scoring metric
-    scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_proba=True)
+
+    scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_threshold=True)
 
     # Create the Isolation Forest model
     model = IsolationForest(random_state=random_state)
@@ -34,15 +36,12 @@ def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, ra
     # Create the randomized search object
     search = RandomizedSearchCV(estimator=model, param_distributions=param_grid,
                                 n_iter=n_iter, cv=cv, scoring=scoring, random_state=random_state,
-                                n_jobs=-1, verbose=5)
+                                n_jobs=-1, verbose=0)
 
     # Fit the search to the data
     search.fit(X_train, y_train)
 
-    best_estimator = search.best_estimator_
-    best_params = search.best_params_
-
-    return best_estimator, best_params
+    return search
 
 #index_output = TimeBasedCV(train_period=30*3, test_period=30,freq='days').split(X, validation_split_date=datetime.date(2018,4,1),date_column="TX_DATETIME")
 #results  = model.cv_results_
