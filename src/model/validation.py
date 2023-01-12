@@ -1,35 +1,48 @@
-import numpy as np
-import datetime
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import IsolationForest
+from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.model_selection import RandomizedSearchCV
 
 
-def model_validation(X,model_params,cv,target = "TX_FRAUD",estimator = IsolationForest()):
+def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, random_state=42):
     """
-    Run a model validation using K-fold cross validation technique with random search to find the best hyperparameters.
+    Tune the hyperparameters of an Isolation Forest model using RandomizedSearchCV.
 
     Parameters:
-    X : pd.DataFrame : The feature matrix
-    model_params : Dict : Dictionnary of possible hyperparameters for the model
-    cv : int : The number of fold used for K-fold cross validation
-    target : str : the column name of the target variable
-    estimator : sklearn estimator : The estimator object, (default is IsolationForest)
+        X_train (pd.DataFrame): Training set features
+        y_train (pd.Series): Training set labels
+        param_grid (dict, optional): Dictionary containing the parameter grid to use for the search. If not provided, a default grid will be used.
+        n_iter (int, optional): Number of iterations for the RandomizedSearchCV.
+        cv (int, optional): Number of folds for cross-validation.
+        random_state (int, optional): Seed for the random number generator.
 
     Returns:
-    sklearn.model_selection._search.RandomizedSearchCV : the object containing the fit model, the best hyperparamters and the evaluation scores
+        best_estimator (IsolationForest): The best estimator found by the search.
+        best_params (dict): The best hyperparameters found by the search.
     """
-    estimator = estimator
-    model_params = model_params
-    model = RandomizedSearchCV(
-                                estimator = estimator,
-                                param_distributions = model_params,
-                                n_iter = 10,
-                                n_jobs = -1,
-                                cv = cv,
-                                verbose=5,
-                                random_state = None,
-                                return_train_score = True)
+    if param_grid is None:
+        param_grid = {'n_estimators': [100, 250, 500, 750, 1000],
+                      'max_samples': [256, 512, 1024, 2048, 4096],
+                      'contamination': [0.01, 0.05, 0.1, 0.15, 0.2],
+                      'max_features': [1, 0.5, 'auto']}
 
-    results = model.fit(X.drop(target, axis=1),X[target])
+    # Define the scoring metric
+    scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_proba=True)
 
-    return results
+    # Create the Isolation Forest model
+    model = IsolationForest(random_state=random_state)
+
+    # Create the randomized search object
+    search = RandomizedSearchCV(estimator=model, param_distributions=param_grid,
+                                n_iter=n_iter, cv=cv, scoring=scoring, random_state=random_state,
+                                n_jobs=-1, verbose=5)
+
+    # Fit the search to the data
+    search.fit(X_train, y_train)
+
+    best_estimator = search.best_estimator_
+    best_params = search.best_params_
+
+    return best_estimator, best_params
+
+#index_output = TimeBasedCV(train_period=30*3, test_period=30,freq='days').split(X, validation_split_date=datetime.date(2018,4,1),date_column="TX_DATETIME")
+#results  = model.cv_results_
