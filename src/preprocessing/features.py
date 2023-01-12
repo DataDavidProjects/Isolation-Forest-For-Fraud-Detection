@@ -82,6 +82,18 @@ def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, window
     return terminal_transactions
 
 def get_time_features(transactions_df,time_col= "TX_DATETIME",time_frames = ["day","hour", "minute"],index="TRANSACTION_ID"):
+    """
+       Extract time-based features from a DataFrame containing transaction data.
+
+       Parameters:
+           transactions_df : pd.DataFrame : DataFrame containing transactions data
+           time_col : str : Column name of the datetime column
+           time_frames : list : list of strings representing the time components to extract ["day","hour", "minute"]
+           index : str : Column name of the index column
+
+       Returns:
+           pd.DataFrame : DataFrame containing extracted time-based features.
+    """
     transactions_df = transactions_df[[time_col,index]].copy()
     transactions_df[time_col] = pd.to_datetime(transactions_df[time_col]) # make sure the column is datetime
     time_feats = pd.concat([transactions_df[time_col].dt.__getattribute__(time) for time in time_frames], axis=1)
