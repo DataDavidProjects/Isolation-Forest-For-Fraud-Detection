@@ -1,5 +1,5 @@
 from sklearn.metrics import make_scorer,roc_auc_score
-import numpy as np
+from src.preprocessing.helpers import timer_decorator
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
@@ -30,20 +30,20 @@ def evaluate_model(model, X_test, y_test):
     }
     return pd.Series(benchmark)
 
-
+@timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
     auc_score = make_scorer(roc_auc_score)
-    skf = StratifiedKFold(n_splits=cv, random_state=None)
+    skf = StratifiedKFold(n_splits=cv, random_state=None,shuffle=False)
     best_score = 0
     best_params = {}
     for i in range(n_iter):
         current_params = {k: np.random.choice(v) for k, v in param_grid.items()}
         scores = []
-        for train_index, test_index in skf.split(X.values, y.values):
-            X_train, X_test = X[train_index], X[test_index]
+        for train_index, test_index in skf.split(X, y):
+            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
             y_train, y_test = y[train_index], y[test_index]
             estimator.set_params(**current_params)
-            estimator.fit(X_train, y_train)
+            estimator.fit(X_train)
             # Note flipped scores for IsolationForest
             y_pred = -estimator.score_samples(X_test)
             score = auc_score(y_test, y_pred)

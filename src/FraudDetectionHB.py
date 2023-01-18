@@ -42,8 +42,7 @@ time_features = ['TX_TIME_SECONDS', 'TX_TIME_DAYS', 'TX_MONTH', 'TX_DAY', 'TX_HO
 helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO', 'TX_DATETIME', 'CUSTOMER_ID', 'TERMINAL_ID']
 
 features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features + time_features
-#______________________________________________________________
-
+#___________________________________________________________________
 
 
 # _____________________ HYPCV ______________________________________
@@ -53,7 +52,6 @@ max_samples = [i*1000 for i in range(1,11)]
 param_grid={ 'n_estimators':n_estimators,
              'contamination':contamination,
              "max_samples":max_samples,
-             'behaviour':['old','new'],
              'bootstrap':[False,True],
              'n_jobs':[-1],
              'random_state':[None],
@@ -64,14 +62,14 @@ best_params, best_score = random_search_cv(IsolationForest(),param_grid,X[featur
 #______________________________________________________________
 
 
-
 #________________________ SPLIT _______________________________
 X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
                                                               train_end="2018-07-01", test_start="2018-07-01",
                                                               test_end="2018-09-01", target="TX_FRAUD")
 #______________________________________________________________
 
-#___________________________ MODEL________________________________
+
+#___________________________ MODEL_________________________________
 model = IsolationForest.set_params(**best_params)
 # Fitting the model
 model.fit(X_train)
