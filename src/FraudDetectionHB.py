@@ -9,17 +9,17 @@ from src.preprocessing.features import create_feature_matrix
 from src.preprocessing.helpers import TimeBasedCV
 from src.model.validation import tune_isolation_forest
 
-
-calendar = pd.date_range('2018-04-01', '2018-09-30',  inclusive="both").strftime('%Y-%m-%d')
+start = '2018-04-01'
+end = '2018-09-30'
+calendar = pd.date_range(start, end,inclusive="both").strftime('%Y-%m-%d')
 root = "https://github.com/Fraud-Detection-Handbook/simulated-data-raw/blob/main/data/"
 path_data = [f"{root}{date}.pkl?raw=true" for date in calendar]
-
 transactions_df = read_all_trx(path_data).sort_values('TX_DATETIME').reset_index(drop=True)
+
 X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15,30],delay_period=7)
 target = "TX_FRAUD"
 index = "TX_DATETIME"
-
-features =['TX_AMOUNT','TX_DURING_WEEKEND', 'TX_DURING_NIGHT', 'CUSTOMER_ID_NB_TX_1DAY_WINDOW',
+features =['TX_AMOUNT','TX_DURING_WEEKEND', 'TX_DURING_NIGHT','CUSTOMER_ID_NB_TX_1DAY_WINDOW',
            'CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW', 'CUSTOMER_ID_NB_TX_7DAY_WINDOW',
            'CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW', 'CUSTOMER_ID_NB_TX_30DAY_WINDOW',
            'CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW', 'TERMINAL_ID_NB_TX_1DAY_WINDOW',
@@ -27,18 +27,26 @@ features =['TX_AMOUNT','TX_DURING_WEEKEND', 'TX_DURING_NIGHT', 'CUSTOMER_ID_NB_T
            'TERMINAL_ID_RISK_7DAY_WINDOW', 'TERMINAL_ID_NB_TX_30DAY_WINDOW',
            'TERMINAL_ID_RISK_30DAY_WINDOW']
 
-X_train = X.loc[X[index] < "2018-06-01"][features]
-X_test = X.loc[(X[index] >= "2018-06-01") & (X[index] < "2018-09-01")][features]
+train_period = "2018-08-01"
+X_train = X.loc[X[index] < train_period][features]
+X_test = X.loc[(X[index] >= train_period) & (X[index] < end)][features]
 
-y_train = X.loc[X[index] < "2018-06-01"][target]
-y_test = X.loc[(X[index] >= "2018-06-01") & (X[index] < "2018-09-01")][target]
-
+y_train = X.loc[X[index] < train_period][target]
+y_test = X.loc[(X[index] >= train_period) & (X[index] < end)][target]
 
 from sklearn.ensemble import IsolationForest
-iso_Forest = IsolationForest(n_estimators=100, max_samples=256, contamination=0.2, random_state=2018)## Fitting the model
-iso_Forest.fit(X_train)#### Ploting the graph to identify the anomolie score .
+iso_Forest = IsolationForest(n_estimators=100, max_samples=1000, contamination=0.02, random_state=2018)
+# Fitting the model
+iso_Forest.fit(X_train[features])
+X_test["scores"] = iso_Forest.score_samples(X_test[features])
+alert = np.percentile(X_test["scores"].values,1)
+X_test["anomaly"] = X_test["scores"] < alert
+# AUC
+from sklearn.metrics import roc_auc_score
+roc_auc_score(y_test,X_test.anomaly.astype(int))
+# Ploting the graph to identify the anomolie score
 plt.figure(figsize=(12, 8))
-plt.hist(scores, bins=50);
+plt.hist(X_test["scores"], bins=50);
 
 
 

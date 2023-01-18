@@ -4,9 +4,8 @@ from src.preprocessing.helpers import timer_decorator
 def is_night(tx_datetime):
     # Get the hour of the transaction
     tx_hour = tx_datetime.hour
-    # Binary value: 1 if hour less than 6, and 0 otherwise
-    is_night = tx_hour <= 6
-
+    # Binary value: opposite of day ( day is hour between 6 and 18)
+    is_night = not(tx_hour >= 6 and tx_hour <= 18)
     return int(is_night)
 
 
@@ -15,7 +14,6 @@ def is_weekend(tx_datetime):
     weekday = tx_datetime.weekday()
     # Binary value: 0 if weekday, 1 if weekend
     is_weekend = weekday >= 5
-
     return int(is_weekend)
 
 
@@ -53,10 +51,10 @@ def get_customer_spending_behaviour_features(customer_transactions, windows_size
         customer_transactions['CUSTOMER_ID_AVG_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(AVG_AMOUNT_TX_WINDOW)
 
     # Reindex according to transaction IDs
-    customer_transactions.index = customer_transactions.TRANSACTION_ID
+    customer_transactions = customer_transactions.set_index("TRANSACTION_ID")
 
     # And return the dataframe with the new features
-    return customer_transactions
+    return customer_transactions.reset_index(names="TRANSACTION_ID")
 
 def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, windows_size_in_days= [1, 7, 30], feature= "TERMINAL_ID"):
     """
@@ -101,12 +99,13 @@ def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, window
         terminal_transactions[feature + '_RISK_' + str(window_size) + 'DAY_WINDOW'] = list(RISK_WINDOW)
 
     # Assign the 'TRANSACTION_ID' column as the index of the dataframe
-    terminal_transactions.index = terminal_transactions.TRANSACTION_ID
+    terminal_transactions = terminal_transactions.set_index("TRANSACTION_ID")
+
 
     # Replace NA values with 0 (all undefined risk scores where NB_TX_WINDOW is 0)
     terminal_transactions.fillna(0, inplace=True)
 
-    return terminal_transactions
+    return terminal_transactions.reset_index(names="TRANSACTION_ID")
 
 def get_time_features(transactions_df, time_col= "TX_DATETIME", time_frames =["month", "day", "hour", "minute"], index="TRANSACTION_ID"):
     """
@@ -121,20 +120,19 @@ def get_time_features(transactions_df, time_col= "TX_DATETIME", time_frames =["m
        Returns:
            pd.DataFrame : DataFrame containing extracted time-based features.
     """
-    transactions_df = transactions_df[[time_col,index]].copy()
     # Cast the columns as a datetime object
     transactions_df[time_col] = pd.to_datetime(transactions_df[time_col]) # make sure the column is datetime
-
-
+    # Sort by time
+    transactions_df= transactions_df.sort_values('TX_DATETIME').reset_index(drop=True)
     # Iterate over the column to extract month day hour minute seconds
     time_feats = pd.concat([transactions_df[time_col].dt.__getattribute__(time) for time in time_frames], axis=1)
     # Rename the columns using upper case
     time_feats.columns = ["TX_"+time.upper() for time in time_frames]
-
     # Get dummy features based on time of trx
     time_feats['TX_DURING_WEEKEND'] = transactions_df.TX_DATETIME.apply(is_weekend)
     time_feats['TX_DURING_NIGHT'] = transactions_df.TX_DATETIME.apply(is_night)
-
+    # Add back TRANSACTION_ID
+    time_feats["TRANSACTION_ID"] = transactions_df["TRANSACTION_ID"]
     return time_feats
 
 @timer_decorator
@@ -181,11 +179,13 @@ def create_feature_matrix(transactions_df, windows_size_in_days= [1, 7, 30], del
         pd.DataFrame : DataFrame containing generated features
 
     """
+    # Sort by time
+    transactions_df = transactions_df.sort_values('TX_DATETIME').reset_index(drop=True)
     feature_df_list = []
     # Iterate over different pipelines and keys to generate features dataframe
     for pipeline, key in [("customer","CUSTOMER_ID"),("terminal","TERMINAL_ID"),("time","TX_DATETIME")]:
         features_df = create_features(transactions_df, key=key, pipeline=pipeline, windows_size_in_days=windows_size_in_days, delay_period=delay_period)
-        feature_df_list.append(features_df)
+        feature_df_list.append(features_df.set_index("TRANSACTION_ID"))
     # Concatenate features dataframes and prevent duplicates
     X = pd.concat(feature_df_list, axis=1)
     return X.loc[:, ~X.columns.duplicated()]

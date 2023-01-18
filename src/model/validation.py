@@ -4,12 +4,12 @@ from sklearn.model_selection import RandomizedSearchCV
 from src.preprocessing.helpers import timer_decorator
 import numpy as np
 
-def scorer_f(estimator, X):
-    return np.mean(estimator.score_samples(X))
+def scorer_if(estimator, X,percentile_flag):
+    return np.percentile(estimator.score_samples(X),percentile_flag)
 
 
 @timer_decorator
-def tune_isolation_forest(X_train, y_train, param_grid=None, scoring=scorer_f ,n_iter=10, cv=5, random_state=42):
+def tune_isolation_forest(X_train, y_train, param_grid=None, scoring=scorer_if ,n_iter=10, cv=5, random_state=42):
     """
     Tune the hyperparameters of an Isolation Forest model using RandomizedSearchCV.
 
