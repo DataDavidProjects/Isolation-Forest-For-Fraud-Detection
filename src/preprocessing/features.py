@@ -38,23 +38,36 @@ def get_customer_spending_behaviour_features(customer_transactions, windows_size
 
     # For each window size
     for window_size in windows_size_in_days:
-        # Compute the sum of the transaction amounts and the number of transactions for the given window size
+        # Compute statistics of the transaction amounts for the given window size
         SUM_AMOUNT_TX_WINDOW = customer_transactions['TX_AMOUNT'].rolling(str(window_size) + 'd').sum()
         NB_TX_WINDOW = customer_transactions['TX_AMOUNT'].rolling(str(window_size) + 'd').count()
+        MAX_AMOUNT_TX_WINDOW = customer_transactions['TX_AMOUNT'].rolling(str(window_size) + 'd').max()
+        STD_AMOUNT_TX_WINDOW = customer_transactions['TX_AMOUNT'].rolling(str(window_size) + 'd').std()
+        QNT70_AMOUNT_TX_WINDOW = customer_transactions.set_index("TX_DATETIME")['TX_AMOUNT'].rolling(str(3) + 'd').quantile(0.7)
+        QNT90_AMOUNT_TX_WINDOW = customer_transactions.set_index("TX_DATETIME")['TX_AMOUNT'].rolling(str(3) + 'd').quantile(0.9)
 
-        # Compute the average transaction amount for the given window size
-        # NB_TX_WINDOW is always >0 since current transaction is always included
+
         AVG_AMOUNT_TX_WINDOW = SUM_AMOUNT_TX_WINDOW / NB_TX_WINDOW
+        VC_AMOUNT_TX_WINDOW = STD_AMOUNT_TX_WINDOW/AVG_AMOUNT_TX_WINDOW * 100
 
         # Save feature values
         customer_transactions['CUSTOMER_ID_NB_TX_' + str(window_size) + 'DAY_WINDOW'] = list(NB_TX_WINDOW)
         customer_transactions['CUSTOMER_ID_AVG_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(AVG_AMOUNT_TX_WINDOW)
+        customer_transactions['CUSTOMER_ID_MAX_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(MAX_AMOUNT_TX_WINDOW)
+        customer_transactions['CUSTOMER_ID_VC_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(VC_AMOUNT_TX_WINDOW)
+        customer_transactions['CUSTOMER_ID_QT70_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(QNT70_AMOUNT_TX_WINDOW)
+        customer_transactions['CUSTOMER_ID_QT90_AMOUNT_' + str(window_size) + 'DAY_WINDOW'] = list(QNT90_AMOUNT_TX_WINDOW)
+
+    # Flags amount compared to rolling tx distributions
+    for window_size in windows_size_in_days:
+        for q in [0.7,0.9]:
+            customer_transactions[f"TX_FLAG_QT{str(int(q*100)).upper()}_"+ str(window_size)+ 'DAY_WINDOW'] = (customer_transactions["TX_AMOUNT"] >= customer_transactions[f'CUSTOMER_ID_QT{str(int(q*100)).upper()}_AMOUNT_' + str(window_size) + 'DAY_WINDOW']).astype(int)
 
     # Reindex according to transaction IDs
     customer_transactions = customer_transactions.set_index("TRANSACTION_ID")
 
     # And return the dataframe with the new features
-    return customer_transactions.reset_index(names="TRANSACTION_ID")
+    return customer_transactions.reset_index(names="TRANSACTION_ID").fillna(-1)
 
 def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, windows_size_in_days= [1, 7, 30], feature= "TERMINAL_ID"):
     """
