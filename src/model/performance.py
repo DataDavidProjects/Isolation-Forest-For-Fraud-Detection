@@ -28,7 +28,7 @@ def evaluate_model(model, X_test, y_test):
        "dummy":  roc_auc_score(y_test, dummy_not),
        "random": roc_auc_score(y_test, random_scores)
     }
-    return  pd.Series(benchmark)
+    return pd.Series(benchmark)
 
 
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
@@ -39,7 +39,7 @@ def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
     for i in range(n_iter):
         current_params = {k: np.random.choice(v) for k, v in param_grid.items()}
         scores = []
-        for train_index, test_index in skf.split(X, y):
+        for train_index, test_index in skf.split(X.values, y.values):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             estimator.set_params(**current_params)

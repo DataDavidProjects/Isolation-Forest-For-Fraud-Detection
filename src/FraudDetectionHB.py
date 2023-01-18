@@ -44,24 +44,12 @@ helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO', 'TX_DATETIME', 'CUSTOMER_ID',
 features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features + time_features
 #______________________________________________________________
 
-#________________________ SPLIT _______________________________
-X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
-                                                              train_end="2018-07-01", test_start="2018-07-01",
-                                                              test_end="2018-09-01", target="TX_FRAUD")
-#______________________________________________________________
 
-#___________________________ MODEL________________________________
-model = IsolationForest(n_estimators=100, max_samples=5000, contamination=0.002, random_state=2018)
-# Fitting the model
-model.fit(X_train)
-# Reports Performance
-report, cm, benchmark = evaluate_model(model, X_test, y_test)
-#___________________________________________________________________
 
 # _____________________ HYPCV ______________________________________
 contamination = [i/1000 for i in range(1,11)]
 n_estimators = [i*10 for i in range(1,16)]
-max_samples = [i/1000 for i in range(1,11)]
+max_samples = [i*1000 for i in range(1,11)]
 param_grid={ 'n_estimators':n_estimators,
              'contamination':contamination,
              "max_samples":max_samples,
@@ -74,6 +62,22 @@ param_grid={ 'n_estimators':n_estimators,
 y = X[target]
 best_params, best_score = random_search_cv(IsolationForest(),param_grid,X[features],y)
 #______________________________________________________________
+
+
+
+#________________________ SPLIT _______________________________
+X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
+                                                              train_end="2018-07-01", test_start="2018-07-01",
+                                                              test_end="2018-09-01", target="TX_FRAUD")
+#______________________________________________________________
+
+#___________________________ MODEL________________________________
+model = IsolationForest.set_params(**best_params)
+# Fitting the model
+model.fit(X_train)
+# Reports Performance
+report, cm, benchmark = evaluate_model(model, X_test, y_test)
+#___________________________________________________________________
 
 
 
