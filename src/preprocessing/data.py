@@ -12,7 +12,7 @@ def read_all_trx(files_path,axis = 0):
     return total_data
 
 
-def train_test_split_transactions(X,features,target,train_start,train_end,test_start,test_end):
+def train_test_split_transactions(X,features,train_start= "2018-04-01",train_end = "2018-07-01",test_start = "2018-07-01",test_end = "2018-09-01",target = "TX_FRAUD"):
     """
     Parameters:
     X (pd.DataFrame) : The input dataset containing the transactions data.

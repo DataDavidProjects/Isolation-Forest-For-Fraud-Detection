@@ -48,6 +48,12 @@ def evaluate_model(model, X_test, y_test):
 
 
 def scorer_if(estimator, X,percentile_flag):
+    """
+    :param estimator: isolation forest
+    :param X: feature matrix
+    :param percentile_flag: percentile of anomaly score chosen as alert
+    :return: returns the value of the percentile
+    """
     return np.percentile(estimator.score_samples(X),percentile_flag)
 
 

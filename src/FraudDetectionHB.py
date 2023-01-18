@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
+from sklearn.metrics import roc_auc_score ,classification_report
 import sys
 sys.path.append("/Isolation-Forest-For-Fraud-Detection/src/")
 from src.preprocessing.data import read_all_trx , train_test_split_transactions
@@ -31,32 +32,38 @@ index = "TX_DATETIME"
 
 train_period = "2018-07-01"
 
-customer_features = [ i for i in X.columns if "CUSTOMER_ID_" in i]
+customer_features = [i for i in X.columns if "CUSTOMER_ID_" in i]
 
-flag_features =  [ i for i in X.columns if "TX_FLAG_" in i]
+flag_features = [i for i in X.columns if "TX_FLAG_" in i]
 
-terminal_features = [ i for i in X.columns if "TERMINAL_ID_" in i]
+terminal_features = [i for i in X.columns if "TERMINAL_ID_" in i]
 
-time_features = ['TX_TIME_SECONDS', 'TX_TIME_DAYS','TX_MONTH','TX_DAY', 'TX_HOUR','TX_MINUTE','TX_DURING_WEEKEND', 'TX_DURING_NIGHT']
+time_features = ['TX_TIME_SECONDS', 'TX_TIME_DAYS', 'TX_MONTH', 'TX_DAY', 'TX_HOUR', 'TX_MINUTE', 'TX_DURING_WEEKEND',
+                 'TX_DURING_NIGHT']
 
-helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO','TX_DATETIME', 'CUSTOMER_ID', 'TERMINAL_ID', ]
+helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO', 'TX_DATETIME', 'CUSTOMER_ID', 'TERMINAL_ID']
 
-features = ['TX_AMOUNT']
+features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features
 #______________________________________________________________
 
 
 #________________________ SPLIT _______________________________
-X_train,X_test,y_train,y_test = train_test_split_transactions(X)
+X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
+                                                              train_end="2018-07-01", test_start="2018-07-01",
+                                                              test_end="2018-09-01", target="TX_FRAUD")
 #______________________________________________________________
 
 
 
+
+
+
 #___________________________ MODEL________________________________
-iso_Forest = IsolationForest(n_estimators=100, max_samples=2000, contamination=0.002, random_state=2018)
+iso_Forest = IsolationForest(n_estimators=100, max_samples=5000, contamination=0.002, random_state=2018)
 # Fitting the model
 iso_Forest.fit(X_train)
 # AUC
-from sklearn.metrics import roc_auc_score ,classification_report
+
 X_test["scores"] = iso_Forest.score_samples(X_test)
 alert = np.percentile(X_test["scores"].values,1)
 X_test["anomaly"] = X_test["scores"] < alert
