@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import datetime
 import sys
 sys.path.append("/Isolation-Forest-For-Fraud-Detection/src/")
@@ -18,7 +19,14 @@ X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15,30],d
 target = "TX_FRAUD"
 index = "TX_DATETIME"
 
-features = ['TX_AMOUNT', 'TX_TIME_SECONDS', 'TX_TIME_DAYS']
+features =['TX_AMOUNT','TX_DURING_WEEKEND', 'TX_DURING_NIGHT', 'CUSTOMER_ID_NB_TX_1DAY_WINDOW',
+           'CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW', 'CUSTOMER_ID_NB_TX_7DAY_WINDOW',
+           'CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW', 'CUSTOMER_ID_NB_TX_30DAY_WINDOW',
+           'CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW', 'TERMINAL_ID_NB_TX_1DAY_WINDOW',
+           'TERMINAL_ID_RISK_1DAY_WINDOW', 'TERMINAL_ID_NB_TX_7DAY_WINDOW',
+           'TERMINAL_ID_RISK_7DAY_WINDOW', 'TERMINAL_ID_NB_TX_30DAY_WINDOW',
+           'TERMINAL_ID_RISK_30DAY_WINDOW']
+
 X_train = X.loc[X[index] < "2018-06-01"][features]
 X_test = X.loc[(X[index] >= "2018-06-01") & (X[index] < "2018-09-01")][features]
 
@@ -26,27 +34,39 @@ y_train = X.loc[X[index] < "2018-06-01"][target]
 y_test = X.loc[(X[index] >= "2018-06-01") & (X[index] < "2018-09-01")][target]
 
 
-# _____________________ CV ____________________________________
-contamination = np.linspace(0.01,0.1, num=10, retstep=False).round(3).tolist()
-n_estimators = np.linspace(10,500, num=20, retstep=False).astype(int).tolist()
-max_depth = np.linspace(2,11, num=10, retstep=False).astype(int).tolist()
+from sklearn.ensemble import IsolationForest
+iso_Forest = IsolationForest(n_estimators=100, max_samples=256, contamination=0.2, random_state=2018)## Fitting the model
+iso_Forest.fit(X_train)#### Ploting the graph to identify the anomolie score .
+plt.figure(figsize=(12, 8))
+plt.hist(scores, bins=50);
+
+
+
+# _____________________ HYPCV ____________________________________
+contamination = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+n_estimators = np.linspace(50,500, num=20, retstep=False).astype(int).tolist()
+max_samples = ["auto"]+[i/1000 for i in range(1,11)]
 
 param_grid={ 'n_estimators':n_estimators,
-             'contamination':contamination + ['legacy'],
-             'max_depth':max_depth,
+             'contamination':contamination,
+             "max_samples":max_samples,
              'behaviour':['old','new'],
-             'bootstrap':[True],
+             'bootstrap':[False,True],
              'n_jobs':[-1],
              'random_state':[None],
              'verbose':[0]}
-
 
 search = tune_isolation_forest(X_train.values, y_train.values)
 best_estimator = search.best_estimator_
 best_params = search.best_params_
 #______________________________________________________________
 
-# ____________________RESULTS_________________________________
+
+
+
+
+
+# ____________________ CV RESULTS_________________________________
 results = pd.DataFrame(search.cv_results_).sort_values("rank_test_score")
 #______________________________________________________________
 

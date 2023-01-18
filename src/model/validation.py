@@ -2,9 +2,14 @@ from sklearn.ensemble import IsolationForest
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV
 from src.preprocessing.helpers import timer_decorator
+import numpy as np
+
+def scorer_f(estimator, X):
+    return np.mean(estimator.score_samples(X))
+
 
 @timer_decorator
-def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, random_state=42):
+def tune_isolation_forest(X_train, y_train, param_grid=None, scoring=scorer_f ,n_iter=10, cv=5, random_state=42):
     """
     Tune the hyperparameters of an Isolation Forest model using RandomizedSearchCV.
 
@@ -27,8 +32,8 @@ def tune_isolation_forest(X_train, y_train, param_grid=None, n_iter=10, cv=5, ra
                       'max_features': [1, 0.5, 'auto']}
 
     # Define the scoring metric
-
-    scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_threshold=True)
+    if scoring is None:
+        scoring = make_scorer(roc_auc_score, greater_is_better=True, needs_threshold=True)
 
     # Create the Isolation Forest model
     model = IsolationForest(random_state=random_state)

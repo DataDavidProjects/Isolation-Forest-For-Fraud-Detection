@@ -1,6 +1,23 @@
 import pandas as pd
 from src.preprocessing.helpers import timer_decorator
 
+def is_night(tx_datetime):
+    # Get the hour of the transaction
+    tx_hour = tx_datetime.hour
+    # Binary value: 1 if hour less than 6, and 0 otherwise
+    is_night = tx_hour <= 6
+
+    return int(is_night)
+
+
+def is_weekend(tx_datetime):
+    # Transform date into weekday (0 is Monday, 6 is Sunday)
+    weekday = tx_datetime.weekday()
+    # Binary value: 0 if weekday, 1 if weekend
+    is_weekend = weekday >= 5
+
+    return int(is_weekend)
+
 
 def get_customer_spending_behaviour_features(customer_transactions, windows_size_in_days=[1, 7, 30]):
     """
@@ -107,10 +124,17 @@ def get_time_features(transactions_df, time_col= "TX_DATETIME", time_frames =["m
     transactions_df = transactions_df[[time_col,index]].copy()
     # Cast the columns as a datetime object
     transactions_df[time_col] = pd.to_datetime(transactions_df[time_col]) # make sure the column is datetime
+
+
     # Iterate over the column to extract month day hour minute seconds
     time_feats = pd.concat([transactions_df[time_col].dt.__getattribute__(time) for time in time_frames], axis=1)
     # Rename the columns using upper case
     time_feats.columns = ["TX_"+time.upper() for time in time_frames]
+
+    # Get dummy features based on time of trx
+    time_feats['TX_DURING_WEEKEND'] = transactions_df.TX_DATETIME.apply(is_weekend)
+    time_feats['TX_DURING_NIGHT'] = transactions_df.TX_DATETIME.apply(is_night)
+
     return time_feats
 
 @timer_decorator
