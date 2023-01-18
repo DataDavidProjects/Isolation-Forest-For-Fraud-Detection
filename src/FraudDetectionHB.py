@@ -14,7 +14,6 @@ calendar = pd.date_range(start, end, inclusive="both").strftime('%Y-%m-%d')
 root = "https://github.com/Fraud-Detection-Handbook/simulated-data-raw/blob/main/data/"
 path_data = [f"{root}{date}.pkl?raw=true" for date in calendar]
 transactions_df = read_all_trx(path_data).sort_values('TX_DATETIME').reset_index(drop=True)
-
 scenario_1 = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"] == 1]
 scenario_2 = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"] == 2]
 scenario_3 = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"] == 3]
@@ -24,9 +23,22 @@ scenario_3 = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"] == 3]
 X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15,30],delay_period=7)
 target = "TX_FRAUD"
 index = "TX_DATETIME"
-features =[]
-
 train_period = "2018-07-01"
+
+customer_features = [ i for i in X.columns if "CUSTOMER_ID_" in i] + ['TX_AMOUNT']
+
+flag_features =  [ i for i in X.columns if "TX_FLAG_" in i] + ['TX_AMOUNT']
+
+terminal_features = [ i for i in X.columns if "TERMINAL_ID_" in i] +['TX_AMOUNT']
+
+time_features = ['TX_TIME_SECONDS', 'TX_TIME_DAYS','TX_MONTH',
+                 'TX_DAY', 'TX_HOUR','TX_MINUTE',
+                 'TX_DURING_WEEKEND', 'TX_DURING_NIGHT']
+
+helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO','TX_DATETIME', 'CUSTOMER_ID', 'TERMINAL_ID', ]
+
+features = ['TX_AMOUNT']
+
 X_train,X_test,y_train,y_test = train_test_split_transactions(X)
 
 

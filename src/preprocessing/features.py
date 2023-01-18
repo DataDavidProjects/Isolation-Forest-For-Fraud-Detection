@@ -203,3 +203,5 @@ def create_feature_matrix(transactions_df, windows_size_in_days= [1, 7, 30], del
     # Concatenate features dataframes and prevent duplicates
     X = pd.concat(feature_df_list, axis=1)
     return X.loc[:, ~X.columns.duplicated()]
+
+
