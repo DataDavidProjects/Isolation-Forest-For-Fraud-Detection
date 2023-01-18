@@ -34,15 +34,16 @@ y_train = X.loc[X[index] < train_period][target]
 y_test = X.loc[(X[index] >= train_period) & (X[index] < end)][target]
 
 from sklearn.ensemble import IsolationForest
-iso_Forest = IsolationForest(n_estimators=100, max_samples=1000, contamination=0.02, random_state=2018)
+iso_Forest = IsolationForest(n_estimators=100, max_samples=2000, contamination=0.002, random_state=2018)
 # Fitting the model
 iso_Forest.fit(X_train)
 X_test["scores"] = iso_Forest.score_samples(X_test)
 alert = np.percentile(X_test["scores"].values,1)
 X_test["anomaly"] = X_test["scores"] < alert
 # AUC
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score ,classification_report
 print(roc_auc_score(y_test,X_test.anomaly.astype(int)))
+print(classification_report(y_test,X_test.anomaly.astype(int)))
 # Ploting the graph to identify the anomolie score
 plt.figure(figsize=(12, 8))
 plt.hist(X_test["scores"], bins=50);

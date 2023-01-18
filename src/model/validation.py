@@ -1,5 +1,5 @@
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.metrics import make_scorer, roc_auc_score , classification_report
 from sklearn.model_selection import RandomizedSearchCV
 from src.preprocessing.helpers import timer_decorator
 import numpy as np
