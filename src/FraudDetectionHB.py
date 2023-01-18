@@ -1,13 +1,10 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
-from sklearn.metrics import roc_auc_score ,classification_report
 import sys
 sys.path.append("/Isolation-Forest-For-Fraud-Detection/src/")
 from src.preprocessing.data import read_all_trx , train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
-from src.model.performance import tune_isolation_forest
+from src.model.performance import tune_isolation_forest , evaluate_model
+from src.model.validation import *
 
 
 
@@ -43,9 +40,8 @@ time_features = ['TX_TIME_SECONDS', 'TX_TIME_DAYS', 'TX_MONTH', 'TX_DAY', 'TX_HO
 
 helper_columns = ['TX_FRAUD', 'TX_FRAUD_SCENARIO', 'TX_DATETIME', 'CUSTOMER_ID', 'TERMINAL_ID']
 
-features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features
+features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features + time_features
 #______________________________________________________________
-
 
 #________________________ SPLIT _______________________________
 X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
@@ -53,33 +49,18 @@ X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train
                                                               test_end="2018-09-01", target="TX_FRAUD")
 #______________________________________________________________
 
-
-
-
-
-
 #___________________________ MODEL________________________________
-iso_Forest = IsolationForest(n_estimators=100, max_samples=5000, contamination=0.002, random_state=2018)
+model = IsolationForest(n_estimators=100, max_samples=5000, contamination=0.002, random_state=2018)
 # Fitting the model
-iso_Forest.fit(X_train)
-# AUC
-
-X_test["scores"] = iso_Forest.score_samples(X_test)
-alert = np.percentile(X_test["scores"].values,1)
-X_test["anomaly"] = X_test["scores"] < alert
-print(roc_auc_score(y_test,X_test.anomaly.astype(int)))
-print(classification_report(y_test,X_test.anomaly.astype(int)))
-
-# Ploting the graph to identify the anomolie score
-plt.figure(figsize=(12, 8))
-plt.hist(X_test["scores"], bins=50);
+model.fit(X_train)
+# Reports Performance
+report, cm, benchmark = evaluate_model(model, X_test, y_test, plot=True, threshold=99)
 #___________________________________________________________________
 
 # _____________________ HYPCV ______________________________________
 contamination = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
 n_estimators = np.linspace(50,500, num=20, retstep=False).astype(int).tolist()
 max_samples = ["auto"]+[i/1000 for i in range(1,11)]
-
 param_grid={ 'n_estimators':n_estimators,
              'contamination':contamination,
              "max_samples":max_samples,
@@ -95,9 +76,10 @@ best_params = search.best_params_
 #______________________________________________________________
 
 
-
-
-
+predictions_df = pd.concat([X_test,y_test],axis=1).copy()
+predictions_df['predictions'] = -model.score_samples(predictions_df[features])
+AUC_ROC = metrics.roc_auc_score(y_test,predictions_df['predictions'])
+AP = metrics.average_precision_score(y_test,predictions_df['predictions'])
 
 # ____________________ CV RESULTS_________________________________
 results = pd.DataFrame(search.cv_results_).sort_values("rank_test_score")

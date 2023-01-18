@@ -1,6 +1,8 @@
 from sklearn.metrics import confusion_matrix,make_scorer,roc_auc_score,classification_report
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import IsolationForest
 from sklearn.model_selection import RandomizedSearchCV
 from src.preprocessing.helpers import timer_decorator
@@ -23,10 +25,10 @@ def cutoff_predict(model, X_test, threshold):
     # calculate the threshold based on the percentile
     threshold = np.percentile(scores, threshold)
     # make binary predictions based on the threshold
-    y_pred = [1 if s < threshold else 0 for s in scores]
+    y_pred = [1 if s > threshold else 0 for s in scores]
     return y_pred
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(model, X_test, y_test,plot = True, threshold = 99 ):
     """
         Evaluates the performance of the model using AUC and classification report
 
@@ -34,16 +36,37 @@ def evaluate_model(model, X_test, y_test):
         model (object): The trained model that will be used to make predictions
         X_test (pd.DataFrame): The test set
         y_test (pd.Series): The true labels of the test set
+        plot (bool): Plot Confusion Matrix
 
         Returns:
-        pd.DataFrame: A dataframe containing the classification report
+        pd.DataFrame: A dataframe containing the classification report, benchmark and CM
     """
-    y_pred = cutoff_predict(model, X_test, threshold = 90)
-    auc = roc_auc_score(y_test, y_pred)
+    # Note that model score are flipped for scikit learn evaluation greater better
+    scores = -model.score_samples(X_test)
+    alert = np.percentile(scores,threshold)
+    y_pred = (scores > alert).astype(int)
+    # Confusion matrix
     cm = confusion_matrix(y_test, y_pred)
+    # Make predictions using model,random and dummy
     report = classification_report(y_test, y_pred, output_dict=True)
+    random_scores = pd.Series(np.random.uniform(size=len(y_test)))
+    dummy_not = [0 for _ in range(0, len(y_test))]
+    # Summarize in benchmark
+    benchmark = {
+       "model":  roc_auc_score(y_test, scores),
+       "dummy":  roc_auc_score(y_test, dummy_not),
+       "random": roc_auc_score(y_test, random_scores)
+    }
+    auc = roc_auc_score(y_test, scores)
     print("AUC: {:.3f}".format(auc))
-    return pd.DataFrame(report) ,pd.DataFrame(cm)
+    # Plot CM
+    if plot:
+        sns.heatmap(cm, annot=True, fmt="d", cmap='Blues')
+        plt.title("Confusion Matrix")
+        plt.xlabel("Predicted Label")
+        plt.ylabel("True Label")
+        plt.show()
+    return pd.DataFrame(report), pd.DataFrame(cm), pd.Series(benchmark)
 
 
 

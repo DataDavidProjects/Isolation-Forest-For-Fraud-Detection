@@ -154,6 +154,7 @@ def prequentialSplit(transactions_df,
     return prequential_split_indices
 
 
+
 def card_precision_top_k_day(df_day, top_k):
     # This takes the max of the predictions AND the max of label TX_FRAUD for each CUSTOMER_ID,
     # and sorts by decreasing order of fraudulent prediction
