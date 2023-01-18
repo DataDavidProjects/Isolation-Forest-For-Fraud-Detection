@@ -12,3 +12,25 @@ def read_all_trx(files_path,axis = 0):
     return total_data
 
 
+def train_test_split_transactions(X,features,target,train_start,train_end,test_start,test_end):
+    """
+    Parameters:
+    X (pd.DataFrame) : The input dataset containing the transactions data.
+    features (List[str]) : List of features columns names
+    target (str) : Target column name
+    train_start (str) : Start time for the training set in the format 'YYYY-MM-DD'
+    train_end (str) : End time for the training set in the format 'YYYY-MM-DD'
+    test_start (str) : Start time for the testing set in the format 'YYYY-MM-DD'
+    test_end (str) : End time for the testing set in the format 'YYYY-MM-DD'
+
+    Returns:
+    Tuple : Tuple containing the splitted data (X_train,X_test,y_train,y_test)
+    """
+    X_train = X.loc[X["TX_DATETIME"].between(train_start,train_end)][features]
+    y_train = X.loc[X["TX_DATETIME"].between(train_start,train_end)][target]
+
+    X_test = X.loc[X["TX_DATETIME"].between(test_start,test_end)][features]
+    y_test = X.loc[X["TX_DATETIME"].between(test_start,test_end)][target]
+
+    return X_train,X_test,y_train,y_test
+

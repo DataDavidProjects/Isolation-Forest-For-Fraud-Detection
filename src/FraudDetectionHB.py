@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import datetime
 import sys
 sys.path.append("/Isolation-Forest-For-Fraud-Detection/src/")
-from src.preprocessing.data import read_all_trx
+from src.preprocessing.data import read_all_trx , train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
-from src.model.validation import tune_isolation_forest
+from src.model.performance import tune_isolation_forest
 
 start = '2018-04-01'
 end = '2018-09-30'
@@ -18,20 +17,10 @@ transactions_df = read_all_trx(path_data).sort_values('TX_DATETIME').reset_index
 X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15,30],delay_period=7)
 target = "TX_FRAUD"
 index = "TX_DATETIME"
-features =['TX_AMOUNT','TX_DURING_WEEKEND', 'TX_DURING_NIGHT','CUSTOMER_ID_NB_TX_1DAY_WINDOW',
-           'CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW', 'CUSTOMER_ID_NB_TX_7DAY_WINDOW',
-           'CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW', 'CUSTOMER_ID_NB_TX_30DAY_WINDOW',
-           'CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW', 'TERMINAL_ID_NB_TX_1DAY_WINDOW',
-           'TERMINAL_ID_RISK_1DAY_WINDOW', 'TERMINAL_ID_NB_TX_7DAY_WINDOW',
-           'TERMINAL_ID_RISK_7DAY_WINDOW', 'TERMINAL_ID_NB_TX_30DAY_WINDOW',
-           'TERMINAL_ID_RISK_30DAY_WINDOW']
+features =[]
 
 train_period = "2018-07-01"
-X_train = X.loc[X[index] < train_period][features]
-X_test = X.loc[(X[index] >= train_period) & (X[index] < end)][features]
-
-y_train = X.loc[X[index] < train_period][target]
-y_test = X.loc[(X[index] >= train_period) & (X[index] < end)][target]
+X_train,X_test,y_train,y_test = train_test_split_transactions(X)
 
 from sklearn.ensemble import IsolationForest
 iso_Forest = IsolationForest(n_estimators=100, max_samples=2000, contamination=0.002, random_state=2018)
