@@ -32,7 +32,6 @@ def evaluate_model(model, X_test, y_test):
 
 @timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
-    auc_score = make_scorer(roc_auc_score,needs_threshold=True)
     skf = StratifiedKFold(n_splits=cv, random_state=None,shuffle=False)
     best_score = 0
     best_params = {}
@@ -45,8 +44,8 @@ def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
             estimator.set_params(**current_params)
             estimator.fit(X_train)
             # Note flipped scores for IsolationForest
-            y_pred = -estimator.score_samples(X_test)
-            score = auc_score(y_test, y_pred)
+            anomaly_scores = -estimator.score_samples(X_test)
+            score = roc_auc_score(y_test, anomaly_scores)
             scores.append(score)
         mean_score = np.mean(scores)
         if mean_score > best_score:
