@@ -60,6 +60,7 @@ def get_customer_spending_behaviour_features(customer_transactions, windows_size
 
     # Flags amount compared to rolling tx distributions
     for window_size in windows_size_in_days:
+        customer_transactions[f"TX_FLAG_AMOUNT_IS_MAX_" + str(window_size) + 'DAY_WINDOW'] = (customer_transactions["TX_AMOUNT"] >=  customer_transactions['CUSTOMER_ID_MAX_AMOUNT_' + str(window_size) + 'DAY_WINDOW']).astype(int)
         for q in [0.7,0.9]:
             customer_transactions[f"TX_FLAG_QT{str(int(q*100)).upper()}_"+ str(window_size)+ 'DAY_WINDOW'] = (customer_transactions["TX_AMOUNT"] >= customer_transactions[f'CUSTOMER_ID_QT{str(int(q*100)).upper()}_AMOUNT_' + str(window_size) + 'DAY_WINDOW']).astype(int)
 
