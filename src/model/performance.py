@@ -32,7 +32,7 @@ def evaluate_model(model, X_test, y_test):
 
 @timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
-    auc_score = make_scorer(roc_auc_score)
+    auc_score = make_scorer(roc_auc_score,needs_threshold=True)
     skf = StratifiedKFold(n_splits=cv, random_state=None,shuffle=False)
     best_score = 0
     best_params = {}
