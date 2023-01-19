@@ -71,6 +71,8 @@ X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train
 
 #___________________________ MODEL_________________________________
 model = IsolationForest.set_params(**best_params)
+best_params_cv = {'n_estimators': 120, 'contamination': 0.008, 'max_samples': 10000, 'bootstrap': True, 'n_jobs': -1,
+ 'random_state': None, 'verbose': 0}
 # Fitting the model
 model.fit(X_train)
 # Reports Performance
