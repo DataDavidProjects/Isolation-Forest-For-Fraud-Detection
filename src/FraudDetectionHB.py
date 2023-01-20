@@ -6,7 +6,7 @@ from sklearn.ensemble import IsolationForest
 from src.preprocessing.data import read_all_trx , train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
 from src.model.performance import evaluate_model ,random_search_cv
-
+from src.model.anomalydetection import  MahalanobisOneclassClassifier
 
 
 #______________________________ DATA______________________________________
@@ -45,6 +45,8 @@ features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features
 #___________________________________________________________________
 
 
+
+
 # _____________________ HYPCV ______________________________________
 contamination = [i/1000 for i in range(1,11)]
 n_estimators = [i*10 for i in range(1,16)]
@@ -70,13 +72,18 @@ X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train
 
 
 #___________________________ MODEL_________________________________
-model = IsolationForest.set_params(**best_params)
-best_params_cv = {'n_estimators': 120, 'contamination': 0.008, 'max_samples': 10000, 'bootstrap': True, 'n_jobs': -1,
- 'random_state': None, 'verbose': 0}
+
+clf = MahalanobisOneclassClassifier(X_train, significance_level=0.05)
+mahalanobis_dist = clf.predict_proba(X_test)
+
+
+model = IsolationForest(**best_params)
+best_params_cv = {'n_estimators': 120, 'contamination': 0.008, 'max_samples': 10000,
+                  'bootstrap': True, 'n_jobs': -1, 'random_state': None, 'verbose': 0}
 # Fitting the model
 model.fit(X_train)
 # Reports Performance
-report, cm, benchmark = evaluate_model(model, X_test, y_test)
+benchmark = evaluate_model(model, X_test, y_test)
 #___________________________________________________________________
 
 
