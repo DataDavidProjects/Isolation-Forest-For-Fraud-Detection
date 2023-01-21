@@ -112,3 +112,26 @@ transactions_df.loc[condition,"TX_FRAUD_SCENARIO"].value_counts()
 condition = transactions_df["TX_DATETIME"].between(results_ts.loc[1,"test_start"], results_ts.loc[1,"test_end"])
 transactions_df.loc[condition,"TX_FRAUD_SCENARIO"].value_counts()
 #____________________________________________________________________________
+
+
+
+#________________________ FEATURE INDEPENDENT SPLIT _________________________
+basic = ['TX_AMOUNT','TX_TIME_SECONDS', 'TX_TIME_DAYS']
+features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features + time_features
+auc_are_feat_type  = pd.DataFrame()
+for feats in [basic,customer_features,time_features,terminal_features]:
+    # Reports Performance
+    auc_are_feat_type = pd.concat([auc_are_feat_type,time_window_cv(transactions_df,model,feats)],0)
+
+indexlist = []
+for feat in ["raw_features", "customer_features", "time_features", "terminal_features"]:
+    for time in range(1, 3):
+        indexname = feat + f"_time_folder_{time}"
+        indexlist.append(indexname)
+auc_are_feat_type.index = indexlist
+
+validation_values  = auc_are_feat_type["validation"].explode()[0::3]
+validation_values.name = "AUC"
+validation_values.index = indexlist
+auc_are_feat_type = pd.concat([auc_are_feat_type,validation_values],1)
+#____________________________________________________________________________
