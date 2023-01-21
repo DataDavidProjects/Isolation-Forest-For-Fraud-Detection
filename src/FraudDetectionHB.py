@@ -3,10 +3,11 @@ sys.path.append("/Isolation-Forest-For-Fraud-Detection/src/")
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
-from src.preprocessing.data import read_all_trx , train_test_split_transactions
+from src.preprocessing.data import read_all_trx, train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
-from src.model.performance import evaluate_model ,random_search_cv
-from src.model.anomalydetection import  MahalanobisOneclassClassifier
+from src.model.performance import evaluate_model, random_search_cv
+from src.model.anomalydetection import MahalanobisOneclassClassifier
+from src.preprocessing.helpers import scenario_sample
 
 
 #______________________________ DATA______________________________________
@@ -86,9 +87,22 @@ model.fit(X_train)
 benchmark = evaluate_model(model, X_test, y_test)
 #___________________________________________________________________
 
+scenario_sensitivity = []
+for scenario in transactions_df["TX_FRAUD_SCENARIO"].unique()[1:]:
+    scenario_x = scenario_sample(transactions_df,scenario)
+    X_train,X_test,y_train,y_test = train_test_split_transactions(create_feature_matrix(scenario_x,
+                                                                                        windows_size_in_days=[1, 5, 7, 15, 30],
+                                                                                        delay_period=7),
+                                                                  features,
+                                                                  train_start="2018-04-01", train_end="2018-07-01",
+                                                                  test_start="2018-08-01",  test_end="2018-09-01",
+                                                                  target="TX_FRAUD")
+    # Fitting the model
+    model.fit(X_train[features])
+    # Reports Performance
+    benchmark = evaluate_model(model, X_test, y_test)
+    scenario_sensitivity.append(benchmark)
 
-
-
-
-
-
+scenario_sensitivity = pd.concat(scenario_sensitivity,axis=1).T
+scenario_sensitivity.index = [f"scenario_{i}" for i in range(1,4)]
+scenario_sensitivity

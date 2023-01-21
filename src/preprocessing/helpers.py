@@ -15,6 +15,12 @@ def timer_decorator(func):
     return wrapper
 
 
+def scenario_sample(transactions_df,scenario):
+    scenarios = [0,scenario]
+    df = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"].isin(scenarios),:]
+    return df
+
+
 
 
 

@@ -1,8 +1,11 @@
-from sklearn.metrics import make_scorer,roc_auc_score
-from src.preprocessing.helpers import timer_decorator
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 import numpy as np
+import time
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import roc_auc_score
+from src.preprocessing.helpers import timer_decorator
+from src.preprocessing.features import create_feature_matrix
+from src.preprocessing.data import train_test_split_transactions
 
 
 def evaluate_model(model, X_test, y_test):
@@ -32,6 +35,19 @@ def evaluate_model(model, X_test, y_test):
 
 @timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
+    """
+           Evaluates the performance of the model using RandomizedSearchCV
+
+           Parameters:
+           estimator (object): The trained model that will be used to make predictions
+           X (pd.DataFrame): The data set
+           y (pd.Series): The true labels of the data set
+           param_grid (dict): Parameter of estimator
+
+           Returns:
+           best_score: A variable containing  benchmark
+           best_params: A variable containing  params
+       """
     skf = StratifiedKFold(n_splits=cv, random_state=None,shuffle=False)
     best_score = 0
     best_params = {}
@@ -52,4 +68,39 @@ def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
             best_score = mean_score
             best_params = current_params
     return best_params, best_score
+
+
+from datetime import datetime as dt
+def time_window_cv(X,model,features,target="TX_FRAUD", months_in_train_window = 2,months_in_test_window = 1):
+    min_period = X["TX_DATETIME"].min()
+    max_period = X["TX_DATETIME"].max()
+    train_start = min_period
+    results = []
+    print("Creating features...")
+    X = create_feature_matrix(X, windows_size_in_days=[1, 5, 7, 15, 30], delay_period=7)
+    print("Start Time Cross Validation...")
+    while True:
+        train_end = train_start + pd.DateOffset(months=months_in_train_window)
+        test_start = train_end + pd.DateOffset(months=months_in_test_window)
+        test_end = test_start + pd.DateOffset(months=months_in_test_window)
+        if test_end > max_period:
+            break
+        print("Train:", train_start, train_end)
+        print("Test:", test_start, test_end)
+        X_train, X_test, y_train, y_test = train_test_split_transactions(X, features,
+                                                                         train_start=train_start,
+                                                                         train_end=train_end,
+                                                                         test_start=test_start,
+                                                                         test_end=test_end,
+                                                                         target=target)
+        start_time = time.time()
+        model.fit(X_train[features])
+        end_time = time.time()
+        execution_time = end_time - start_time
+        validation = evaluate_model(model, X_test, y_test)
+        results.append(
+            {'train_start': train_start, 'train_end': train_end, 'test_start': test_start, 'test_end': test_end,
+             'execution_time': execution_time, 'model': model, 'validation': validation})
+        train_start += pd.DateOffset(months=1)
+    return pd.DataFrame(results)
 
