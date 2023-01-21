@@ -79,7 +79,7 @@ benchmark = evaluate_model(model, X_test, y_test)
 
 
 
-#________________________ SCENATIO  SPLIT ___________________________________
+#________________________ SCENARIO  SPLIT ___________________________________
 scenario_sensitivity = []
 for scenario in transactions_df["TX_FRAUD_SCENARIO"].unique()[1:]:
     scenario_x = scenario_sample(transactions_df,scenario)
