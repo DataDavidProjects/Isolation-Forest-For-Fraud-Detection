@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 from src.preprocessing.data import read_all_trx, train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
-from src.model.performance import evaluate_model, random_search_cv
+from src.model.performance import evaluate_model, random_search_cv,time_window_cv
 from src.model.anomalydetection import MahalanobisOneclassClassifier
 from src.preprocessing.helpers import scenario_sample
 
@@ -62,31 +62,26 @@ param_grid={ 'n_estimators':n_estimators,
 
 y = X[target]
 best_params, best_score = random_search_cv(IsolationForest(),param_grid,X[features],y)
-#______________________________________________________________
-
-
-#________________________ SPLIT _______________________________
-X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
-                                                              train_end="2018-07-01", test_start="2018-07-01",
-                                                              test_end="2018-09-01", target="TX_FRAUD")
-#______________________________________________________________
-
-
-#___________________________ MODEL_________________________________
-
-clf = MahalanobisOneclassClassifier(X_train, significance_level=0.05)
-mahalanobis_dist = clf.predict_proba(X_test)
-
-
 model = IsolationForest(**best_params)
 best_params_cv = {'n_estimators': 120, 'contamination': 0.008, 'max_samples': 10000,
                   'bootstrap': True, 'n_jobs': -1, 'random_state': None, 'verbose': 0}
+#______________________________________________________________
+
+
+#________________________ STANDARD INDEPENDENT SPLIT _________________________
+X_train,X_test,y_train,y_test = train_test_split_transactions(X, features, train_start="2018-04-01",
+                                                              train_end="2018-07-01", test_start="2018-07-01",
+                                                              test_end="2018-09-01", target="TX_FRAUD")
 # Fitting the model
 model.fit(X_train)
 # Reports Performance
 benchmark = evaluate_model(model, X_test, y_test)
-#___________________________________________________________________
+#____________________________________________________________________________
 
+
+
+
+#________________________ SCENATIO  SPLIT ___________________________________
 scenario_sensitivity = []
 for scenario in transactions_df["TX_FRAUD_SCENARIO"].unique()[1:]:
     scenario_x = scenario_sample(transactions_df,scenario)
@@ -106,3 +101,16 @@ for scenario in transactions_df["TX_FRAUD_SCENARIO"].unique()[1:]:
 scenario_sensitivity = pd.concat(scenario_sensitivity,axis=1).T
 scenario_sensitivity.index = [f"scenario_{i}" for i in range(1,4)]
 scenario_sensitivity
+#____________________________________________________________________________
+
+
+
+#______________________________ TIME WINDOW SPLIT_______________________________
+results_ts = time_window_cv(transactions_df,model,features)
+
+condition = transactions_df["TX_DATETIME"].between(results_ts.loc[0,"test_start"], results_ts.loc[0,"test_end"])
+transactions_df.loc[condition,"TX_FRAUD_SCENARIO"].value_counts()
+
+condition = transactions_df["TX_DATETIME"].between(results_ts.loc[1,"test_start"], results_ts.loc[1,"test_end"])
+transactions_df.loc[condition,"TX_FRAUD_SCENARIO"].value_counts()
+#____________________________________________________________________________

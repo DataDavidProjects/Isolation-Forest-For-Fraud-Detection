@@ -47,3 +47,8 @@ class MahalanobisOneclassClassifier():
 
     def predict(self, xtest):
         return np.array([int(i) for i in self.predict_proba(xtest) > self.critical_value])
+
+
+#
+# clf = MahalanobisOneclassClassifier(X_train, significance_level=0.05)
+# mahalanobis_dist = clf.predict_proba(X_test)

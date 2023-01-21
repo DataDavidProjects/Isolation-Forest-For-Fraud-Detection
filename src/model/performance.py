@@ -88,11 +88,7 @@ def time_window_cv(X,model,features,target="TX_FRAUD", months_in_train_window = 
         print("Train:", train_start, train_end)
         print("Test:", test_start, test_end)
         X_train, X_test, y_train, y_test = train_test_split_transactions(X, features,
-                                                                         train_start=train_start,
-                                                                         train_end=train_end,
-                                                                         test_start=test_start,
-                                                                         test_end=test_end,
-                                                                         target=target)
+                                                                         train_start=train_start,target=target)
         start_time = time.time()
         model.fit(X_train[features])
         end_time = time.time()
