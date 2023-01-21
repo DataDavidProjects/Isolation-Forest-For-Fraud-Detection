@@ -46,8 +46,6 @@ features = ['TX_AMOUNT'] + flag_features + terminal_features + customer_features
 #___________________________________________________________________
 
 
-
-
 # _____________________ HYPCV ______________________________________
 contamination = [i/1000 for i in range(1,11)]
 n_estimators = [i*10 for i in range(1,16)]
