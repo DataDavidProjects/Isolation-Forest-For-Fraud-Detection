@@ -8,7 +8,7 @@ from src.preprocessing.features import create_feature_matrix
 from src.preprocessing.data import train_test_split_transactions
 
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(model, X_test, y_test,benchmark=True):
     """
         Evaluates the performance of the model using AUC
 
@@ -23,15 +23,19 @@ def evaluate_model(model, X_test, y_test):
     # Make predictions using model,random and dummy
     # Note that model score are flipped for scikit learn evaluation greater better
     scores = -model.score_samples(X_test)
-    random_scores = np.random.uniform(size=len(y_test))
-    dummy_not = np.zeros_like(y_test)
-    # Summarize in benchmark
-    benchmark = {
-       "model":  roc_auc_score(y_test, scores),
-       "dummy":  roc_auc_score(y_test, dummy_not),
-       "random": roc_auc_score(y_test, random_scores)
-    }
-    return pd.Series(benchmark)
+    if benchmark:
+        random_scores = np.random.uniform(size=len(y_test))
+        dummy_not = np.zeros_like(y_test)
+        # Summarize in benchmark
+        benchmark = {
+            "model": roc_auc_score(y_test, scores),
+            "dummy": roc_auc_score(y_test, dummy_not),
+            "random": roc_auc_score(y_test, random_scores)
+        }
+        result = pd.Series(benchmark)
+    else:
+        result = roc_auc_score(y_test, scores)
+    return result
 
 @timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
