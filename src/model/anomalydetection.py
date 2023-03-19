@@ -5,7 +5,6 @@ import numpy as np
 from scipy.stats import chi2
 
 
-
 def mahalanobis(x=None, data=None, cov=None):
     """
     Compute the Mahalanobis Distance between each row of x and the data
@@ -37,7 +36,8 @@ class MahalanobisOneclassClassifier():
 
     def __init__(self, xtrain, significance_level=0.01):
         self.xtrain = xtrain
-        self.critical_value = chi2.ppf((1-significance_level), df=xtrain.shape[1]-1)
+        self.critical_value = chi2.ppf(
+            (1-significance_level), df=xtrain.shape[1]-1)
         print('Critical value is: ', self.critical_value)
 
     def predict_proba(self, xtest):
