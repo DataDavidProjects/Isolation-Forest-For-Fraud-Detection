@@ -24,7 +24,7 @@ scenario_3 = transactions_df.loc[transactions_df["TX_FRAUD_SCENARIO"] == 3]
 
 
 #__________________________ FEATURES _________________________________
-X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15,30],delay_period=7)
+X = create_feature_matrix(transactions_df,windows_size_in_days = [1,5,7,15],delay_period=7)
 target = "TX_FRAUD"
 
 index = "TX_DATETIME"
@@ -84,7 +84,7 @@ scenario_sensitivity = []
 for scenario in transactions_df["TX_FRAUD_SCENARIO"].unique()[1:]:
     scenario_x = scenario_sample(transactions_df,scenario)
     X_train,X_test,y_train,y_test = train_test_split_transactions(create_feature_matrix(scenario_x,
-                                                                                        windows_size_in_days=[1, 5, 7, 15, 30],
+                                                                                        windows_size_in_days=[1, 5, 7, 15],
                                                                                         delay_period=7),
                                                                   features,
                                                                   train_start="2018-04-01", train_end="2018-07-01",
@@ -103,8 +103,13 @@ scenario_sensitivity
 
 
 
-#______________________________ TIME WINDOW SPLIT_______________________________
+#______________________________ TIME WINDOW SPLIT____________________________
+model = IsolationForest()
 results_ts = time_window_cv(transactions_df,model,features)
+#____________________________________________________________________________
+
+
+#____________________________________________________________________________
 
 condition = transactions_df["TX_DATETIME"].between(results_ts.loc[0,"test_start"], results_ts.loc[0,"test_end"])
 transactions_df.loc[condition,"TX_FRAUD_SCENARIO"].value_counts()

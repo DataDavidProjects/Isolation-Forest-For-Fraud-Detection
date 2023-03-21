@@ -29,8 +29,8 @@ def evaluate_model(model, X_test, y_test, benchmark=True):
         dummy_not = np.zeros_like(y_test)
         # Summarize in benchmark
         benchmark = {
-            "model": roc_auc_score(y_test, scores),
-            "dummy": roc_auc_score(y_test, dummy_not),
+            "model":  roc_auc_score(y_test, scores),
+            "dummy":  roc_auc_score(y_test, dummy_not),
             "random": roc_auc_score(y_test, random_scores)
         }
         result = pd.Series(benchmark)
