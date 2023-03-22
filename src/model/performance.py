@@ -39,7 +39,7 @@ def evaluate_model(model, X_test, y_test, benchmark=True):
     return result
 
 
-@timer_decorator
+#@timer_decorator
 def random_search_cv(estimator, param_grid, X, y, n_iter=10, cv=5):
     """
            Evaluates the performance of the model using RandomizedSearchCV
