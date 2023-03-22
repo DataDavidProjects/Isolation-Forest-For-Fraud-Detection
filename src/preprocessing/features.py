@@ -68,7 +68,7 @@ def get_customer_spending_behaviour_features(customer_transactions, windows_size
     customer_transactions = customer_transactions.set_index("TRANSACTION_ID")
 
     # And return the dataframe with the new features
-    return customer_transactions.reset_index(names="TRANSACTION_ID").fillna(-1)
+    return customer_transactions.reset_index().fillna(-1)
 
 def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, windows_size_in_days= [1, 7, 30], feature= "TERMINAL_ID"):
     """
@@ -119,7 +119,7 @@ def get_count_risk_rolling_window(terminal_transactions, delay_period= 7, window
     # Replace NA values with 0 (all undefined risk scores where NB_TX_WINDOW is 0)
     terminal_transactions.fillna(0, inplace=True)
 
-    return terminal_transactions.reset_index(names="TRANSACTION_ID")
+    return terminal_transactions.reset_index("TRANSACTION_ID")
 
 def get_time_features(transactions_df, time_col= "TX_DATETIME", time_frames =["month", "day", "hour", "minute"], index="TRANSACTION_ID"):
     """

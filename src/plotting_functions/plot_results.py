@@ -1,6 +1,8 @@
 from sklearn.metrics import roc_auc_score,roc_curve
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np 
+import pandas as pd
 from matplotlib.colors import ListedColormap
 
 
@@ -40,7 +42,7 @@ def plot_roc_scenarios(data_scenarios_dict,save= False):
         fig.savefig(f'roc_fraud_scenarios.png',transparent=True)
     return fig
 
-def plot_cv_results(aucs,time,color_p,save=False):
+def plot_cv_results(auc_means,time,color_p,save=False):
     x = np.arange(len(time)) 
     width = 0.1  
     multiplier = 0
