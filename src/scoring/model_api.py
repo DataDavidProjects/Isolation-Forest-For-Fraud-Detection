@@ -1,8 +1,43 @@
 from ibm_watson_machine_learning import APIClient
 
+def ibm_model(
+        fields,
+        values,
+        api_key = '6kp6CmCFTD4TRkFgW_QJLUXWLokaPwAnj2ADo7s673dR',
+        location = "eu-gb",
+        deployment_uid = '9b3a85e0-76cf-4f7b-82c4-272464237280',
+        WML_SPACE_ID="d9bc5247-7acd-4601-85fd-910e2c49f299",
+              ):
+
+    wml_credentials = {
+        "apikey": api_key,
+        "url": 'https://' + location + '.ml.cloud.ibm.com'
+    }
+    client = APIClient(wml_credentials)
+    client.set.default_space(WML_SPACE_ID)
+    scoring_payload = {"input_data": [{"fields": fields, "values": values}]}
+    #scoring_payload
+    predictions = client.deployments.score(deployment_uid, scoring_payload)
+    return predictions
+
+
+
+
+username = 'davide_lupis@yahoo.it'
+api_key = 'dvbUwNS8pnLHavMvFzgxC67R6bm9AvLSYdm8h3S6CZDU'
+location = "eu-gb"
+url = 'https://' + location + '.ml.cloud.ibm.com'
+wml_credentials = {
+    "username": username,
+    "apikey": api_key,
+    "url": url,
+    "instance_id": 'openshift',
+    "version": '4.0'
+}
+
 client = APIClient(wml_credentials)
 
-space_id = 'PASTE YOUR SPACE ID HERE'
+space_id = 'd9bc5247-7acd-4601-85fd-910e2c49f299'
 
 client.set.default_space(space_id)
 
@@ -17,9 +52,7 @@ metadata = {
 
 published_model = client.repository.store_model(
     model=model,
-    meta_props=metadata,
-    training_data=train_data,
-    training_target=train_labels)
+    meta_props=metadata)
 
 
 metadata = {
