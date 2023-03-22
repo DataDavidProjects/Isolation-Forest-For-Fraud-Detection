@@ -6,7 +6,6 @@ from sklearn.ensemble import IsolationForest
 from src.preprocessing.data import read_all_trx, train_test_split_transactions
 from src.preprocessing.features import create_feature_matrix
 from src.model.performance import evaluate_model, random_search_cv,time_window_cv
-from src.model.anomalydetection import MahalanobisOneclassClassifier
 from src.preprocessing.helpers import scenario_sample
 
 
