@@ -1,10 +1,11 @@
+from src.scoring.credentials_api import *
 from ibm_watson_machine_learning import APIClient
-from credentials_api import *
 
-client = APIClient(wml_credentials)
-
-
-def store_model(space_id,model,client,model_name = "IsolationForest",model_type= 'scikit-learn_1.0',sofware_spec_uid = "runtime-22.1-py3.9"):
+def store_model(model,client,
+                space_id=space_id,
+                model_name = "IsolationForest",
+                model_type= 'scikit-learn_1.0',
+                sofware_spec_uid = "runtime-22.1-py3.9"):
     client.set.default_space(space_id)
     sofware_spec_uid = client.software_specifications.get_id_by_name(sofware_spec_uid)
     metadata = {
