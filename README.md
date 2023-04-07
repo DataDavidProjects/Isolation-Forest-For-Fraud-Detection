@@ -1,7 +1,8 @@
 # Isolation-Forest-For-Fraud-Detection
 Master Degree Thesis Data Analytics for Business
 
-[![Watch the Canva presentation]](https://www.canva.com/design/DAFfN4hvlLU/KiUbNj0bft8UXolw-h3BOg/view)
+[[Watch the Canva presentation]](https://www.canva.com/design/DAFfN4hvlLU/KiUbNj0bft8UXolw-h3BOg/view)
+![image](https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png)
 
 
 > Developing an effective fraud detection system is a complex process that
