@@ -32,6 +32,7 @@ Master Degree Thesis Data Analytics for Business
 </div>
 <a href="https:&#x2F;&#x2F;www.canva.com&#x2F;design&#x2F;DAFfN4hvlLU&#x2F;view?utm_content=DAFfN4hvlLU&amp;utm_campaign=designshare&amp;utm_medium=embeds&amp;utm_source=link" target="_blank" rel="noopener">CREDIT CARD FRAUD DETECTION THROUGH ISOLATION FOREST</a> by Davide Lupis
 
+
 <p align="center">
   <img src="https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png" />
 </p>
