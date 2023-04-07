@@ -13,7 +13,7 @@ https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-
 > by regulators are explicit rules, often inconsistent with the fast pace of time and
 > technology. Although simulated transactions are purely demonstrative, they are
 > a valuable tool for experimenting new techniques and support the development
-> of fraud detection models. //
+> of fraud detection models.
 > Investigators should supervise the development
 > of new rules and features to spot anomalies, and seek continuous feedback
 > from users and ex former fraudsters. As part of a Data Driven Layer, Isolation
