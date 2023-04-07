@@ -24,8 +24,8 @@ protection and address the trade-off between compliance and efficiency.
 
 
 In this repo you will find
-- PDF of my Final Dissertation 
-- Overleaf zip
+- Final Dissertation in pdf format
+- Overleaf project in zip format
 - Source Code for the Project
 
 Index for the final dissertation:
@@ -34,21 +34,17 @@ Index for the final dissertation:
   * Isolation Forest 
   * Data Assessment
   * Model Choice
-  3.9 Feature Engineering 
-  3.9.1 Customer Spending Behavior
-  3.9.2 Terminal Behavior
-  3.9.3 Pattern in Transaction Time
-  3.9.4 Explicit Flags
-  3.9.5 Final note on Feature Engineering
-  3.10 Model Validation
-  3.10.1 Independent Cross Validation
-  3.10.2 Scenario Cross Validation
-  3.10.3 Time Cross Validation
-  3.11 Architecture of Data Driven Model
-  4 Model Results 
-  4.1 Summary of Business Context 
-  4.2 Results of Time Cross Validation
-  4.3 Results of Fraud Scenario Analysis
-  4.4 Results of Feature Validation
-  4.5 Real Time Example on random User
-  5 Conclusion
+  * Feature Engineering 
+  * Customer Spending Behavior
+  * Terminal Behavior
+  * Pattern in Transaction Time
+  * Explicit Flags
+  * Final note on Feature Engineering
+  * Model Validation
+  * Model Results 
+  * Summary of Business Context 
+  * Results of Time Cross Validation
+  * Results of Fraud Scenario Analysis
+  * Results of Feature Validation
+  * Real Time Example on random User
+  * Conclusion
