@@ -26,5 +26,5 @@ Master Degree Thesis Data Analytics for Business
 
 
 <p align="center">
-  <img src="http://some_place.com/image.png](https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png" />
+  <img src="https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png" />
 </p>
