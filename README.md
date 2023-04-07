@@ -3,7 +3,7 @@ Master Degree Thesis Data Analytics for Business
 
 # BCE Report on Credit Card Frauds
 <p align="center">
-<img width="381" alt="BCEFrauds" src="https://user-images.githubusercontent.com/48164716/230611009-46400e62-ae3f-41a0-b42b-19cffbfba7ab.png">
+<img width="600" alt="BCEFrauds" src="https://user-images.githubusercontent.com/48164716/230611009-46400e62-ae3f-41a0-b42b-19cffbfba7ab.png">
 </p>
 
 > Developing an effective fraud detection system is a complex process that
