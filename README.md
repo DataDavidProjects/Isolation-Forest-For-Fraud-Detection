@@ -22,9 +22,3 @@ Master Degree Thesis Data Analytics for Business
 > collection and cloud computing solutions can help minimize the latency between
 > registration and validity of transactions. However, it is essential to ensure data
 > protection and address the trade-off between compliance and efficiency.
-"
-
-In this repo you will find
-- Final Dissertation in pdf format
-- Overleaf project in zip format
-- Source Code for the Project
