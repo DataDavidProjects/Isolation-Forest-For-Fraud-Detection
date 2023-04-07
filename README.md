@@ -1,4 +1,4 @@
-# Isolation-Forest-For-Fraud-Detection
+# Credit Card Fraud Detection through Isolation-Forest
 Master Degree Thesis Data Analytics for Business
 
 
