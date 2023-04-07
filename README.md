@@ -1,10 +1,11 @@
 # Isolation-Forest-For-Fraud-Detection
 Master Degree Thesis Data Analytics for Business
 
-### BCE Report on Credit Card Frauds
-<p align="center">
-<img width="600" alt="BCEFrauds" src="https://user-images.githubusercontent.com/48164716/230611009-46400e62-ae3f-41a0-b42b-19cffbfba7ab.png">
-</p>
+
+
+https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-b50a-5fd0fba5b160.mp4
+
+
 
 > Developing an effective fraud detection system is a complex process that
 > typically requires more than one technique. The majority of tools fully approved
