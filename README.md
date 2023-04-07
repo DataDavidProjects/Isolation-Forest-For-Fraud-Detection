@@ -1,6 +1,8 @@
 # Isolation-Forest-For-Fraud-Detection
 Master Degree Thesis Data Analytics for Business
 
+[![Watch the video](https://i.imgur.com/vKb2F1B.png)](https://www.canva.com/design/DAFfN4hvlLU/KiUbNj0bft8UXolw-h3BOg/view)
+
 > Developing an effective fraud detection system is a complex process that
 > typically requires more than one technique. The majority of tools fully approved
 > by regulators are explicit rules, often inconsistent with the fast pace of time and
@@ -21,7 +23,6 @@ Master Degree Thesis Data Analytics for Business
 > registration and validity of transactions. However, it is essential to ensure data
 > protection and address the trade-off between compliance and efficiency.
 "
-
 
 In this repo you will find
 - Final Dissertation in pdf format
