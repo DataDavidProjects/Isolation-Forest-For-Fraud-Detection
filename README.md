@@ -29,11 +29,11 @@ In this repo you will find
 - Source Code for the Project
 
 Index for the final dissertation:
-  Introduction 
-  1 Unsupervised Anomaly Detection 
-  2 Isolation Forest 
-  3.7 Data Assessment
-  3.8 Model Choice
+  * Introduction 
+  * Unsupervised Anomaly Detection 
+  * Isolation Forest 
+  * Data Assessment
+  * Model Choice
   3.9 Feature Engineering 
   3.9.1 Customer Spending Behavior
   3.9.2 Terminal Behavior
