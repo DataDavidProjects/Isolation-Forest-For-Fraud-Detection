@@ -7,6 +7,7 @@ https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-
 
 
 
+### Summary
 > Developing an effective fraud detection system is a complex process that
 > typically requires more than one technique. The majority of tools fully approved
 > by regulators are explicit rules, often inconsistent with the fast pace of time and
@@ -31,11 +32,6 @@ https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-
 ### Results
 <p align="center">
   <img  width="600" src="https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png" />
-</p>
-
-### Application Architecture
-<p align="center">
-  <img width="600" src="https://user-images.githubusercontent.com/48164716/230610987-edfc210d-aedc-49e9-bff8-acef6ce05c6a.png" />
 </p>
 
 
