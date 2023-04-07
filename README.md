@@ -7,7 +7,8 @@ Master Degree Thesis Data Analytics for Business
 > by regulators are explicit rules, often inconsistent with the fast pace of time and
 > technology. Although simulated transactions are purely demonstrative, they are
 > a valuable tool for experimenting new techniques and support the development
-> of fraud detection models. Investigators should supervise the development
+> of fraud detection models. //
+> Investigators should supervise the development
 > of new rules and features to spot anomalies, and seek continuous feedback
 > from users and ex former fraudsters. As part of a Data Driven Layer, Isolation
 > Forest can help existing methods to perform better and avoid explicit rules that
@@ -22,7 +23,7 @@ Master Degree Thesis Data Analytics for Business
 > registration and validity of transactions. However, it is essential to ensure data
 > protection and address the trade-off between compliance and efficiency.
 
-![<div style="position: relative; width: 100%; height: 0; padding-top: 56.2500%;
+[![Watch the video](https://i.imgur.com/vKb2F1B.png)][<div style="position: relative; width: 100%; height: 0; padding-top: 56.2500%;
  padding-bottom: 0; box-shadow: 0 2px 8px 0 rgba(63,69,81,0.16); margin-top: 1.6em; margin-bottom: 0.9em; overflow: hidden;
  border-radius: 8px; will-change: transform;">
   <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0;margin: 0;"
