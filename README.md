@@ -1,7 +1,7 @@
 # Isolation-Forest-For-Fraud-Detection
 Master Degree Thesis Data Analytics for Business
 
-[![Watch the video](https://raw.githubusercontent.com/DataDavidProjects/Isolation-Forest-For-Fraud-Detection/master/media/auc_features.png)](https://github.com/DataDavidProjects/Isolation-Forest-For-Fraud-Detection/blob/master/media/CREDIT%20CARD%20FRAUD%20DETECTION%20THROUGH%20ISOLATION%20FOREST.mp4)
+[![Watch the Canva presentation]](https://www.canva.com/design/DAFfN4hvlLU/KiUbNj0bft8UXolw-h3BOg/view)
 
 
 > Developing an effective fraud detection system is a complex process that
