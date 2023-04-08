@@ -48,7 +48,7 @@ The model has tested using different fraud scenarios.
   * Scenario 3: Every day, a list of 3 customers is drawn at random. In the next 14 days, 1/3 of their transactions have their amounts multiplied by 5 and marked as fraudulent. This scenario simulates a card-not-present fraud where the credentials of a customer have been leaked. The customer continues to make transactions, and transactions of higher values are made by the fraudster who tries to maximize their gains. Detecting this scenario will require adding features that keep track of the spending habits of the customer. As for scenario 2, since the card is only temporarily compromised, additional strategies that involve concept drift should also be designed.
 
 <p align="center">
-  <img  width="600" src="https://user-images.githubusercontent.com/48164716/230724238-80985ba9-38af-4d0a-9012-bbe409570379.png" />
+  <img  width="600" src="https://user-images.githubusercontent.com/48164716/230724468-eb5a2e13-b526-4c9f-93d9-b736aae7c290.png" />
 </p>
 
 
