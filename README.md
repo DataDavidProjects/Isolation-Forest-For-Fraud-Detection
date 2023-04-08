@@ -29,7 +29,7 @@ https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-
 > registration and validity of transactions. However, it is essential to ensure data
 > protection and address the trade-off between compliance and efficiency.
 
-### Cross validation Results
+### Time Consistency validation 
 The model has been trained using different features and tested using a sliding window cross validation.
 Each set of feature represent an area of investigation and the final metric of evaluation was the AUC.
 
@@ -37,7 +37,7 @@ Each set of feature represent an area of investigation and the final metric of e
   <img  width="600" src="https://user-images.githubusercontent.com/48164716/230608542-a0d61bcc-d3d5-4c35-82c4-4a30bbadfe60.png" />
 </p>
 
-### Scenario validation 
+### Fruad Scenario validation 
 The model has tested using different fraud scenarios.
 
 
