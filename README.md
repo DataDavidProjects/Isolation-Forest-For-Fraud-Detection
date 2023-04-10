@@ -1,14 +1,7 @@
 # Credit Card Fraud Detection Through Isolation-Forest
 Master Degree Thesis Data Analytics for Business
 
-
-
-
-
-https://user-images.githubusercontent.com/48164716/230874943-d333f7c4-7e4a-46f2-b943-8caaf74ab080.mp4
-
-
-
+https://user-images.githubusercontent.com/48164716/230920243-717d2533-2920-4de0-82df-8281df3c2d8a.mp4
 
 
 ### Summary
