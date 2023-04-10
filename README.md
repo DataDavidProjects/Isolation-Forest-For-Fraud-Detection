@@ -3,7 +3,11 @@ Master Degree Thesis Data Analytics for Business
 
 
 
-https://user-images.githubusercontent.com/48164716/230611789-5f5f55bb-07ab-48df-b50a-5fd0fba5b160.mp4
+
+
+https://user-images.githubusercontent.com/48164716/230874943-d333f7c4-7e4a-46f2-b943-8caaf74ab080.mp4
+
+
 
 
 
